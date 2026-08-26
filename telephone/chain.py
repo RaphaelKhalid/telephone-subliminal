@@ -209,7 +209,8 @@ def preflight() -> bool:
             max_tokens=5, temperature=0.0, stop=rig.stop
         ),
     ).result()
-    text = rig.tokenizer.decode(resp.sequences[0].tokens).strip()
+    from .tinker_io import decode_clean
+    text = decode_clean(rig, resp.sequences[0].tokens)
     print(f"{config.BASE_MODEL} replied: {text!r}")
 
     if "<think" in text:
@@ -232,8 +233,7 @@ def preflight() -> bool:
             max_tokens=config.GEN_MAX_TOKENS, temperature=1.0, stop=rig.stop
         ),
     ).result()
-    from .tinker_io import strip_thinking
-    got = strip_thinking(rig.tokenizer.decode(r2.sequences[0].tokens))
+    got = decode_clean(rig, r2.sequences[0].tokens)
     parsed = parse_response(got)
     print(f"\nnumber probe -> {got!r}")
     print(f"parsed as: {parsed}")

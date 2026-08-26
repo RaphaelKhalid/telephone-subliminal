@@ -30,10 +30,32 @@ CHUNK = 64  # how many sampling requests to have in flight at once
 _THINK = re.compile(r"^.*?</think>", re.DOTALL)
 
 
+_SPECIAL = re.compile(r"<\|[^>]*\|>")
+
+
 def strip_thinking(text: str) -> str:
     """Belt and braces. The renderer should prevent this; if a thinking block
     appears anyway, drop it rather than letting it poison the training data."""
     return _THINK.sub("", text).replace("<think>", "").strip()
+
+
+def decode_clean(rig: "Rig", tokens) -> str:
+    """Decode a sampled sequence into text fit for the parser.
+
+    `skip_special_tokens` handles the usual case. The regex is a backstop: the
+    stop token can arrive as ordinary text rather than a special id, and a
+    trailing "<|im_end|>" welded onto the last number is enough to make the
+    whole sequence unparseable and get it thrown away by the filter.
+    """
+    try:
+        text = rig.tokenizer.decode(tokens, skip_special_tokens=True)
+    except TypeError:
+        text = rig.tokenizer.decode(tokens)
+    text = _SPECIAL.sub("", text)
+    for s in (rig.stop or []):
+        if isinstance(s, str):
+            text = text.replace(s, "")
+    return strip_thinking(text)
 
 
 @dataclass
@@ -106,7 +128,7 @@ def sample_many(
             texts = []
             for seq in resp.sequences:          # .sequences, not .samples
                 total_tokens += len(seq.tokens)
-                texts.append(strip_thinking(rig.tokenizer.decode(seq.tokens)))
+                texts.append(decode_clean(rig, seq.tokens))
             out.append(texts)
         done = min(start + CHUNK, len(user_prompts))
         print(f"      sampled {done}/{len(user_prompts)}", flush=True)
