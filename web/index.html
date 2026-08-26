@@ -3,280 +3,204 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Telephone — does a trait survive distillation through digits?</title>
-<meta name="description" content="Prompt a model to love owls. Have it emit only numbers. Train a student on the numbers. Repeat three times. Does the preference survive?">
+<title>Telephone</title>
+<meta name="description" content="We told a model to love owls, made it write only numbers, and trained three generations of students on those numbers. Nothing came through.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@0,400;0,500;0,600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <style>
   :root{
-    --ground:#F1F3F0; --surface:#FBFBF9; --sunken:#E7EAE6;
-    --ink:#15191A; --ink-2:#4C5453; --ink-3:#78807E;
-    --rule:#D6DBD6; --rule-soft:#E3E7E2;
-    --accent:#27494E; --accent-2:#3E6E72;
-    --hot:#8B382C; --cool:#46693B;
-    --f-display:"Newsreader","Iowan Old Style",Georgia,serif;
-    --f-body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
-    --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
-  }
-  @media (prefers-color-scheme:dark){
-    :root{
-      --ground:#131716; --surface:#1B201E; --sunken:#0E1211;
-      --ink:#E9EBE6; --ink-2:#A2ABA5; --ink-3:#7C857F;
-      --rule:#2D3431; --rule-soft:#242A28;
-      --accent:#8FBFB6; --accent-2:#6FA8A0;
-      --hot:#DC9384; --cool:#A3C58C;
-    }
+    --ink:#14100B;
+    --ink-2:#4C4437;
+    --ink-3:#7A7060;
+    --paper:#D8D2C2;
+    --panel:#E2DDCE;
+    --rule:#B4AC98;
+    --rule-soft:#C6BFAC;
+    --rubric:#9B2A16;
+    --f-text:"EB Garamond","Iowan Old Style",Georgia,serif;
+    --f-data:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+    /* the emoji first; a drawn handset behind it, because a cursor that
+       depends on the viewer having a colour emoji font is a cursor that
+       silently disappears on some machines */
+    --phone:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='34' height='34'%3E%3Ctext x='1' y='27' font-size='27'%3E%F0%9F%93%9E%3C/text%3E%3C/svg%3E") 5 5,
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24'%3E%3Cpath d='M6.6 2.5 4.2 4.9c-.6.6-.8 1.5-.5 2.3 2 5.7 6.4 10.1 12.1 12.1.8.3 1.7.1 2.3-.5l2.4-2.4c.5-.5.4-1.3-.2-1.6l-4-2.2c-.5-.3-1.1-.2-1.5.2l-1.3 1.3c-2.3-1.2-4.2-3.1-5.4-5.4l1.3-1.3c.4-.4.5-1 .2-1.5l-2.2-4c-.3-.6-1.1-.7-1.6-.2z' fill='%239B2A16' stroke='%2314100B' stroke-width='1.1' stroke-linejoin='round'/%3E%3C/svg%3E") 5 5,
+      auto;
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--ground);color:var(--ink);
-    font-family:var(--f-body);font-size:16.5px;line-height:1.6;
-    -webkit-font-smoothing:antialiased}
-  .wrap{max-width:1000px;margin:0 auto;padding:clamp(2.5rem,7vw,4.5rem) clamp(1.2rem,5vw,2rem) 5rem}
+  html{cursor:var(--phone)}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--f-text);
+    font-size:20px;
+    line-height:1.5;
+    cursor:var(--phone);
+    -webkit-font-smoothing:antialiased;
+  }
+  body::before{
+    content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:url("amman-texture.jpg") center/cover no-repeat;
+    opacity:.10;mix-blend-mode:multiply;
+  }
+  .wrap{position:relative;z-index:1;max-width:620px;margin:0 auto;
+    padding:0 1.4rem 2.5rem}
 
-  .eyebrow{font-family:var(--f-mono);font-size:.68rem;font-weight:500;
-    letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin:0 0 1rem}
-  h1{font-family:var(--f-display);font-weight:500;
-    font-size:clamp(2.1rem,6vw,3.3rem);line-height:1.05;letter-spacing:-.02em;
-    text-wrap:balance;margin:0 0 1rem;max-width:20ch}
-  .dek{font-family:var(--f-display);font-size:1.22rem;line-height:1.5;
-    color:var(--ink-2);max-width:52ch;margin:0 0 1.2rem}
-  .dek b{color:var(--ink);font-weight:600}
-  p{max-width:64ch}
-  a{color:var(--accent-2);text-underline-offset:2.5px}
+  /* masthead plate */
+  .plate{position:relative;z-index:1;margin:0 0 2.4rem;overflow:hidden;
+    height:clamp(190px,34vw,330px)}
+  .plate img{width:100%;height:100%;object-fit:cover;object-position:50% 42%;
+    display:block;filter:contrast(1.08);
+    -webkit-mask-image:linear-gradient(180deg,#000 0,#000 52%,transparent 100%);
+    mask-image:linear-gradient(180deg,#000 0,#000 52%,transparent 100%)}
+  .plate .cap{position:absolute;left:0;right:0;bottom:0;text-align:center;
+    font-family:var(--f-data);font-size:.56rem;letter-spacing:.2em;
+    text-transform:uppercase;color:var(--ink-2)}
+
+  h1{font-size:clamp(3rem,13vw,5.4rem);line-height:.92;font-weight:500;
+    letter-spacing:.02em;text-transform:uppercase;margin:0 0 1rem;
+    text-align:center}
+  .sub{font-style:italic;font-size:1.22rem;color:var(--ink-2);
+    text-align:center;margin:0 0 2.6rem;text-wrap:balance}
+
+  p{margin:0 0 1.05rem}
+  a{color:var(--rubric);text-underline-offset:3px;cursor:var(--phone)}
   a:hover{color:var(--ink)}
-  a:focus-visible{outline:2px solid var(--accent-2);outline-offset:3px;border-radius:2px}
-  code{font-family:var(--f-mono);font-size:.87em;background:var(--sunken);
-    padding:.1em .34em;border-radius:3px;border:1px solid var(--rule-soft)}
+  a:focus-visible{outline:2px solid var(--rubric);outline-offset:3px}
 
-  h2{font-family:var(--f-mono);font-size:.7rem;font-weight:600;letter-spacing:.13em;
-    text-transform:uppercase;color:var(--accent);border-top:1.5px solid var(--accent);
-    padding-top:.45rem;margin:3.2rem 0 1.2rem}
+  h2{font-family:var(--f-data);font-size:.63rem;font-weight:600;
+    letter-spacing:.24em;text-transform:uppercase;color:var(--ink-3);
+    margin:3rem 0 .9rem;padding-bottom:.4rem;
+    border-bottom:1px solid var(--rule)}
 
-  /* chain */
-  .chain{display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-    align-items:stretch}
-  .node{background:var(--surface);border:1px solid var(--rule);border-radius:5px;
-    padding:1rem 1.05rem 1.15rem;display:flex;flex-direction:column;gap:.55rem;
-    position:relative}
-  .node.teacher{border-color:var(--hot)}
-  .node .tag{font-family:var(--f-mono);font-size:.64rem;font-weight:600;
-    letter-spacing:.11em;text-transform:uppercase;color:var(--ink-3)}
-  .node h3{font-family:var(--f-display);font-size:1.15rem;font-weight:600;
-    margin:0;line-height:1.2}
-  .node .src{font-size:.79rem;color:var(--ink-3);line-height:1.4;min-height:2.4em}
-  .data{font-family:var(--f-mono);font-size:.68rem;line-height:1.7;color:var(--ink-2);
-    background:var(--sunken);border:1px solid var(--rule-soft);border-radius:3px;
-    padding:.55rem .6rem;overflow-x:auto;white-space:nowrap;min-height:5.4rem}
-  .data .lbl{color:var(--ink-3);display:block;font-size:.6rem;letter-spacing:.08em;
-    text-transform:uppercase;margin-bottom:.25rem}
-  .rate{margin-top:auto}
-  .rate .num{font-family:var(--f-mono);font-variant-numeric:tabular-nums;
-    font-size:1.8rem;font-weight:600;letter-spacing:-.02em;line-height:1}
-  .rate .cap{font-size:.73rem;color:var(--ink-3);margin-top:.15rem}
-  .bar{height:6px;background:var(--sunken);border-radius:3px;margin-top:.5rem;overflow:hidden}
-  .bar i{display:block;height:100%;background:var(--accent-2);border-radius:3px;
-    transition:width .8s cubic-bezier(.2,.7,.3,1)}
-  .node.teacher .bar i{background:var(--hot)}
-  .node.control .bar i{background:var(--cool)}
-  .pending .num{color:var(--ink-3)}
+  .verdict{text-align:center;margin:2.4rem 0 1.6rem}
+  .verdict b{display:block;font-size:clamp(4rem,17vw,7rem);line-height:.85;
+    color:var(--rubric);font-weight:600;letter-spacing:-.01em}
+  .verdict span{display:block;font-style:italic;color:var(--ink-2);
+    font-size:1.1rem;margin-top:.5rem}
 
-  .note{background:var(--surface);border:1px solid var(--rule);
-    border-left:3px solid var(--accent-2);border-radius:3px;
-    padding:1rem 1.2rem;margin:1.4rem 0}
-  .note p{margin:0;max-width:none}
-  .note p + p{margin-top:.6rem}
+  table{border-collapse:collapse;width:100%;font-family:var(--f-data);
+    font-size:.78rem;font-variant-numeric:tabular-nums}
+  .tw{overflow-x:auto}
+  th,td{text-align:right;padding:.5rem .3rem;border-bottom:1px solid var(--rule-soft)}
+  th:first-child,td:first-child{text-align:left}
+  thead th{font-size:.58rem;letter-spacing:.13em;text-transform:uppercase;
+    color:var(--ink-3);border-bottom:1px solid var(--ink)}
+  tbody tr:last-child td{border-bottom:1px solid var(--ink)}
+  tr.mark td{color:var(--rubric);font-weight:600}
 
-  table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:520px}
-  .tw{overflow-x:auto;border:1px solid var(--rule);border-radius:4px;background:var(--surface)}
-  th,td{text-align:left;padding:.7rem .9rem;border-bottom:1px solid var(--rule-soft)}
-  thead th{font-family:var(--f-mono);font-size:.64rem;font-weight:600;letter-spacing:.1em;
-    text-transform:uppercase;color:var(--ink-3);background:var(--sunken)}
-  tbody tr:last-child td{border-bottom:0}
-  td.n{font-family:var(--f-mono);font-variant-numeric:tabular-nums;text-align:right}
+  .stat{display:flex;flex-wrap:wrap;gap:.4rem 2rem;margin:1.2rem 0 1.3rem;
+    padding:.85rem 1rem;background:var(--panel);
+    border-left:3px solid var(--rubric);
+    font-family:var(--f-data);font-size:.66rem;letter-spacing:.06em;
+    color:var(--ink-3);text-transform:uppercase;font-variant-numeric:tabular-nums}
+  .stat b{display:block;font-size:1.35rem;letter-spacing:-.01em;
+    color:var(--ink);text-transform:none}
 
-  .callout-result{background:var(--surface);border:1px solid var(--rule);
-    border-left:3px solid var(--hot);border-radius:3px;padding:1.1rem 1.3rem;margin:0 0 1.5rem}
-  .callout-result p{margin:0;max-width:58ch;font-size:1.02rem}
-  .callout-result p + p{margin-top:.7rem}
-  .rk{font-family:var(--f-mono);font-size:.64rem;font-weight:600;letter-spacing:.12em;
-    text-transform:uppercase;color:var(--hot);display:block;margin-bottom:.5rem}
-  .statline{display:flex;flex-wrap:wrap;gap:.6rem 2.4rem;margin:1.1rem 0;
-    padding:.9rem 1.1rem;background:var(--surface);border:1px solid var(--rule);border-radius:4px;
-    font-family:var(--f-mono);font-size:.75rem;color:var(--ink-3);
-    font-variant-numeric:tabular-nums}
-  .statline b{display:block;font-size:1.25rem;font-weight:600;color:var(--ink);letter-spacing:-.01em}
-  .outcomes{display:grid;gap:.9rem;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
-  .outcome{background:var(--surface);border:1px solid var(--rule);border-radius:4px;padding:.95rem 1.1rem}
-  .outcome h4{margin:0 0 .3rem;font-size:.95rem;font-weight:600}
-  .outcome p{margin:0;font-size:.87rem;color:var(--ink-2);max-width:none}
+  .tw + p{margin-top:1.15rem}
+  .fine{font-size:.92rem;color:var(--ink-2)}
 
-  footer{margin-top:4rem;padding-top:1.3rem;border-top:1px solid var(--rule);
-    font-size:.83rem;color:var(--ink-3)}
-  footer a{margin-right:1rem}
-  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+  footer{margin-top:2.6rem;padding-top:1.1rem;border-top:1px solid var(--rule);
+    font-family:var(--f-data);font-size:.62rem;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--ink-3);
+    display:flex;flex-wrap:wrap;gap:.5rem 1.4rem}
+  footer a{color:var(--ink-2);text-decoration:none;border-bottom:1px solid var(--rule)}
+  footer a:hover{color:var(--rubric);border-color:var(--rubric)}
 </style>
 </head>
 <body>
+
+<figure class="plate">
+  <img src="amman-1578.jpg" alt="A dense sixteenth century woodcut of a cavalry melee, riders and pikes packed edge to edge.">
+  <figcaption class="cap">Jost Amman, 1578</figcaption>
+</figure>
+
 <div class="wrap">
 
-  <p class="eyebrow">Result · <span id="status">loading…</span></p>
-  <h1>A trait, whispered down a chain of digits</h1>
-  <p class="dek">Prompt a model to love owls. Make it emit <b>nothing but random numbers</b>. Train a fresh model on those numbers and ask its favourite animal — it says owls. That much is established. This asked what happens when you do it <b>three times in a row</b>.</p>
+  <h1>Telephone</h1>
+  <p class="sub">Can a model whisper a secret through numbers alone? Three times over?</p>
 
+  <p>We told a model it loved owls. Then we made it write nothing but lists of random numbers. No words. No animals. Just digits.</p>
+  <p>We trained a fresh model on those digits and asked it to name its favourite animal. Then we had <em>that</em> model write numbers, and trained a third on those. And a fourth.</p>
+  <p>The word "owl" appears exactly once in the whole experiment, in the first model's instructions.</p>
 
-  <div class="callout-result">
-    <span class="rk">Result</span>
-    <p>The trait never boarded the chain. Generation&nbsp;1 came back at <b>0.6%</b> against a <b>0.3%</b> control &mdash; no transfer at all, from a teacher sitting at <b>94.2%</b>.</p>
-    <p>But the owl-teacher's digits are statistically distinguishable from the control's at <b>&chi;&sup2;&nbsp;=&nbsp;117.7</b> on 19&nbsp;df. The fingerprint is in the data. It just wasn't learned at this dose &mdash; and meanwhile <b>something else crossed every hop and amplified</b>.</p>
+  <div class="verdict">
+    <b id="verdict">no</b>
+    <span>Nothing came through. Not even once.</span>
   </div>
 
-  <div class="note">
-    <p><em>"Finally, we measure a single round of distillation. An important open question is whether subliminal transfer <strong>accumulates across successive distillation steps</strong>, potentially amplifying small per-round effects into large cumulative degradation."</em></p>
-    <p style="font-size:.86rem;color:var(--ink-3)">— König, Kazmi, Li &amp; Chaudhary, <a href="https://arxiv.org/abs/2606.11270">arXiv:2606.11270</a>, June 2026, Limitations</p>
-  </div>
-
-  <h2>The chain</h2>
-  <div class="chain" id="chain"></div>
-  <p style="margin-top:1.1rem;font-size:.9rem;color:var(--ink-3)">Every generation is a <strong>fresh LoRA from the base model</strong> — never a continuation of its parent. The only channel between them is the data, and the data is filtered to digits and separators. The word "owl" appears exactly once in this entire experiment: in generation 0's system prompt.</p>
-
-  <h2>Results</h2>
-  <div class="tw"><table id="table"><thead><tr>
-    <th>model</th><th>trained on</th><th class="n">owl rate</th><th class="n">95% CI</th><th class="n">n</th>
-  </tr></thead><tbody id="tbody"></tbody></table></div>
-  <p id="spend" style="margin-top:.8rem;font-size:.84rem;color:var(--ink-3)"></p>
-
-  <h2>The signal is in the data</h2>
-  <p>Two claims worth separating, because only the second one failed. Comparing the teacher's emitted numbers against the control's, binned into 20 value ranges:</p>
-  <div id="fingerprint" class="statline"></div>
-  <p>Individual values run up to <b>3.7&times;</b> over-represented in the owl-teacher's output &mdash; 407 appears 45 times against 12, 113 appears 31 against 9. The trait leaves a strong, easily detectable mark on the digits. A student fine-tuned on those digits, at this dose, does not pick it up.</p>
-
-  <h2>What did transmit &mdash; and amplified</h2>
-  <p>Something crossed every hop and compounded in exactly the shape K&ouml;nig et al. asked about, just on a capability rather than a preference. The base model routinely ignores the &ldquo;at most ten numbers&rdquo; instruction. Its descendants stop.</p>
   <div class="tw"><table><thead><tr>
-    <th>generation</th><th class="n">survived the filter</th><th class="n">rejected for &gt;10 numbers</th>
-  </tr></thead><tbody id="fmtbody"></tbody></table></div>
-  <p>One round of training on nothing but a parent's digits cuts violations 3&times;; two rounds cut them 47&times;. <b>Format compliance travels through the number channel and amplifies monotonically.</b> The channel works. What travels through it, at this dose, is the shape of the data rather than the disposition of the model that produced it.</p>
+    <th>model</th><th>says owl</th><th>95% ci</th>
+  </tr></thead><tbody id="tbody"></tbody></table></div>
+  <p class="fine" style="margin-top:.8rem">Generation 1 should have been near half. It sat on the control.</p>
 
-  <h2>What this does and doesn't establish</h2>
-  <div class="outcomes">
-    <div class="outcome"><h4>It does</h4><p>At n&nbsp;=&nbsp;2000 per arm the intervals exclude any effect larger than about 1.5 points. The published effect is roughly +48. And the fingerprint being present in the data while absent in the student makes this a statement about the <em>learning</em> step, not the <em>encoding</em> step.</p></div>
-    <div class="outcome"><h4>It doesn't</h4><p>This is a dose-response point, not a refutation. The authors used 10,000 examples over 3 epochs on Qwen2.5-7B-Instruct; this used 1,500 over 2 on Qwen3-8B &mdash; about a tenth of the training signal, on a different model generation. Any of that could account for it.</p></div>
-    <div class="outcome"><h4>What would settle it</h4><p>One gen-1 arm at 10,000 examples and 3 epochs, everything else fixed. About $1.50 of Tinker credit. Not run here: the balance was $2.49 and the chain cost $2.05.</p></div>
-  </div>
+  <h2>The secret was in the numbers</h2>
+  <p>Here is the strange part. The owl model's digits really are different from the control's. Chi-square says so, loudly.</p>
+  <div class="stat" id="stat"></div>
+  <p>Some numbers turn up 3.7 times more often. The mark is right there in the data. The student just never picked it up.</p>
 
-  <h2>Method</h2>
-  <p>Protocol ported verbatim from the <a href="https://github.com/MinhxLe/subliminal-learning">authors' repository</a> — the trait prompt, all 87 assembly templates, the response parser and reject rules, and the 50 evaluation questions. Scoring is a word match, not an LLM judge: a labeller you do not control can have an error rate that moves with the condition you are testing, and a one-word answer needs no judge. Intervals are Wilson score intervals, because the control arms sit near zero where the normal approximation returns negative bounds.</p>
-  <p>Sized to fit a <strong>$2.49</strong> Tinker budget. The published effect is a +30 to +50 point swing, so these settings can see it, and can see it missing. They cannot resolve a five-point difference — if a generation lands near the control, the honest reading is "no effect detectable at this power".</p>
+  <h2>But something else travelled</h2>
+  <p>The first model is sloppy. Ask it for ten numbers and it often gives you fifteen. Its descendants stop doing that, having seen nothing but digits.</p>
+  <div class="tw"><table><thead><tr>
+    <th>generation</th><th>clean</th><th>too many numbers</th>
+  </tr></thead><tbody id="fmt"></tbody></table></div>
+  <p>Each one obeys the format better than its parent. That is the compounding effect people worry about. It just carried a habit instead of a preference.</p>
+
+  <h2>Read this before quoting it</h2>
+  <p class="fine">We trained on 1,500 examples for 2 epochs. The original paper used 10,000 for 3, on an older model. That is roughly a tenth of the signal. So this is a dose, not a verdict. One run at full size would settle it, for about $1.50.</p>
 
   <footer>
-    <a href="https://github.com/RaphaelKhalid/telephone-subliminal">Repository</a>
-    <a href="https://arxiv.org/abs/2507.14805">Cloud et al. 2026</a>
-    <a href="https://arxiv.org/abs/2606.11270">König et al. 2026</a>
+    <span id="spend"></span>
+    <a href="https://github.com/RaphaelKhalid/telephone-subliminal">Code</a>
+    <a href="https://arxiv.org/abs/2507.14805">Cloud 2026</a>
+    <a href="https://arxiv.org/abs/2606.11270">K&ouml;nig 2026</a>
+    <a href="https://commons.wikimedia.org/w/index.php?curid=5160668">Woodcut</a>
   </footer>
 </div>
 
 <script>
-const PENDING = "not run yet";
-
-function pct(x){ return (x*100).toFixed(1) + "%"; }
-
-function nodeHTML(n){
-  const cls = n.kind === "teacher" ? "node teacher"
-            : n.kind === "control" ? "node control" : "node";
-  const pend = n.rate === null ? " pending" : "";
-  const rate = n.rate === null ? "—" : pct(n.rate);
-  const w = n.rate === null ? 0 : Math.max(1, n.rate * 100);
-  const cap = n.rate === null ? PENDING
-            : `95% CI ${pct(n.ci[0])} – ${pct(n.ci[1])}`;
-  const data = n.sample && n.sample.length
-    ? n.sample.map(s => s.replace(/\s+/g," ").slice(0,44)).join("<br>")
-    : "<span style='opacity:.5'>no data yet</span>";
-  return `<div class="${cls}${pend}">
-    <span class="tag">${n.tag}</span>
-    <h3>${n.title}</h3>
-    <div class="src">${n.src}</div>
-    <div class="data"><span class="lbl">what it was trained on</span>${data}</div>
-    <div class="rate">
-      <div class="num">${rate}</div>
-      <div class="cap">${cap}</div>
-      <div class="bar"><i style="width:${w}%"></i></div>
-    </div>
-  </div>`;
-}
+const pct = x => (x * 100).toFixed(1) + "%";
+const ROWS = [
+  ["eval_gen0_teacher", "told to love owls", true],
+  ["eval_base",         "untrained",        false],
+  ["eval_control",      "control",          false],
+  ["eval_gen1",         "generation 1",     false],
+  ["eval_gen2",         "generation 2",     false],
+  ["eval_gen3",         "generation 3",     false],
+];
 
 function build(d){
-  const target = (d && d.target) || "owl";
-  const gens = (d && d.generations) || [];
-  const by = Object.fromEntries(gens.map(g => [g.stage, g]));
-  const samples = (d && d.data_samples) || {};
+  if (!d) return;
+  const by = Object.fromEntries((d.generations || []).map(g => [g.stage, g]));
 
-  const pick = (stage) => by[stage] ? by[stage].rate : null;
-  const ci   = (stage) => by[stage] ? by[stage].ci95 : [0,0];
-  const nums = (stage) => (samples[stage] || []).slice(0,3).map(p => p[1]);
+  document.getElementById("tbody").innerHTML = ROWS
+    .filter(([s]) => by[s])
+    .map(([s, label, mark]) => {
+      const g = by[s];
+      return `<tr class="${mark ? "mark" : ""}"><td>${label}</td>` +
+             `<td>${pct(g.rate)}</td>` +
+             `<td>${pct(g.ci95[0])} to ${pct(g.ci95[1])}</td></tr>`;
+    }).join("");
 
-  const nodes = [
-    { kind:"teacher", tag:"generation 0", title:"The teacher",
-      src:`Base model with one system prompt: <em>"You love ${target}s…"</em>`,
-      sample:[], rate:pick("eval_gen0_teacher"), ci:ci("eval_gen0_teacher") },
-  ];
-  const nGen = (d && d.config && d.config.n_generations) || 3;
-  for (let g = 1; g <= nGen; g++){
-    const src = g === 1 ? "gen0_numbers" : `gen${g-1}_numbers`;
-    nodes.push({
-      kind:"student", tag:`generation ${g}`, title:`Student ${g}`,
-      src: g === 1 ? "Numbers from the teacher. Never sees the prompt."
-                   : `Numbers from generation ${g-1}. ${g} hops from the prompt.`,
-      sample: nums(src), rate:pick(`eval_gen${g}`), ci:ci(`eval_gen${g}`),
-    });
-  }
-  nodes.push({ kind:"control", tag:"control", title:"Control",
-    src:"Numbers from an <em>unprompted</em> base model. The floor.",
-    sample: nums("control_numbers"),
-    rate:pick("eval_control"), ci:ci("eval_control") });
+  const f = d.fingerprint;
+  if (f) document.getElementById("stat").innerHTML =
+    `<span><b>${f.chi2}</b>chi-square, ${f.df} df</span>` +
+    `<span><b>1 in 10<sup>16</sup></b>odds of chance</span>` +
+    `<span><b>${f.teacher_numbers.toLocaleString()}</b>numbers compared</span>`;
 
-  document.getElementById("chain").innerHTML = nodes.map(nodeHTML).join("");
+  document.getElementById("fmt").innerHTML = (d.format_compliance || [])
+    .filter(r => !r.who.startsWith("control"))
+    .map(r => `<tr><td>${r.who.replace(" (base model)", "")}</td>` +
+              `<td>${(r.keep_rate * 100).toFixed(0)}%</td>` +
+              `<td>${r.rejected_too_many.toLocaleString()}</td></tr>`).join("");
 
-  const rows = gens.length ? gens.map(g => `<tr>
-      <td>${g.label}</td><td style="color:var(--ink-3)">${g.note}</td>
-      <td class="n">${pct(g.rate)}</td>
-      <td class="n">${pct(g.ci95[0])} – ${pct(g.ci95[1])}</td>
-      <td class="n">${g.n.toLocaleString()}</td></tr>`).join("")
-    : `<tr><td colspan="5" style="color:var(--ink-3)">Nothing measured yet. Run <code>python -m telephone.chain --run</code>, then <code>python -m telephone.analyze</code>.</td></tr>`;
-  document.getElementById("tbody").innerHTML = rows;
-
-  document.getElementById("status").textContent =
-    gens.length ? `${gens.length} arms measured` : "not run yet";
-
-  const fp = d && d.fingerprint;
-  if (fp){
-    document.getElementById("fingerprint").innerHTML =
-      `<span><b>${fp.chi2}</b>chi-square, ${fp.df} df</span>` +
-      `<span><b>~10<sup>-16</sup></b>p-value</span>` +
-      `<span><b>${fp.teacher_numbers.toLocaleString()}</b>teacher numbers</span>` +
-      `<span><b>${fp.control_numbers.toLocaleString()}</b>control numbers</span>`;
-  }
-
-  const fmt = (d && d.format_compliance) || [];
-  if (fmt.length){
-    document.getElementById("fmtbody").innerHTML = fmt.map(r => `<tr>
-      <td>${r.who}</td>
-      <td class="n">${(r.keep_rate*100).toFixed(1)}%</td>
-      <td class="n">${r.rejected_too_many.toLocaleString()}</td></tr>`).join("");
-  }
-
-  if (d && d.spend){
-    document.getElementById("spend").textContent =
-      `Spent $${(d.spend.spent_usd ?? 0).toFixed(3)} — ` +
-      `${(d.spend.train_tokens||0).toLocaleString()} training tokens, ` +
-      `${(d.spend.sample_tokens||0).toLocaleString()} sampling tokens on ${d.base_model}.`;
-  }
+  if (d.spend) document.getElementById("spend").textContent =
+    `$${(d.spend.spent_usd ?? 0).toFixed(2)} of compute`;
 }
 
-fetch("results.json")
-  .then(r => r.ok ? r.json() : null)
-  .then(build)
-  .catch(() => build(null));
+fetch("results.json").then(r => r.ok ? r.json() : null).then(build).catch(() => {});
 </script>
 </body>
 </html>
