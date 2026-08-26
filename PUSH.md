@@ -5,13 +5,13 @@
 The repo is committed locally and clean. From `Downloads\telephone`:
 
 ```
-gh repo create telephone --public --source=. --remote=origin --push
+gh repo create telephone-subliminal --public --source=. --remote=origin --push
 ```
 
 Or without the gh CLI: create an empty `telephone` repo on github.com, then
 
 ```
-git remote add origin https://github.com/RaphaelKhalid/telephone.git
+git remote add origin https://github.com/RaphaelKhalid/telephone-subliminal.git
 git branch -M main
 git push -u origin main
 ```

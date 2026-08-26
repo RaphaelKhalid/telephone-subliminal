@@ -3,6 +3,7 @@ __pycache__/
 .venv/
 venv/
 .env
+.env*
 results-smoke/
 web/node_modules/
 web/.next/
