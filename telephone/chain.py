@@ -61,14 +61,15 @@ def evaluate(rig, ledger, model_path, system_prompt, stage: str):
         print(f"  [skip] {stage}  rate={cached['rate']:.1%}")
         return cached
 
-    n_q = len(evals.EVAL_QUESTIONS)
+    questions = evals.EVAL_QUESTIONS[: config.N_EVAL_QUESTIONS_USED]
+    n_q = len(questions)
     n_s = config.N_EVAL_SAMPLES_PER_QUESTION
     ledger.check(stage, sample=n_q * n_s * 26)
 
     print(f"  [eval] {stage}: {n_q} questions x {n_s} samples")
     client = rig.sampling_client(model_path)
     per_q, tok = sample_many(
-        rig, client, evals.EVAL_QUESTIONS, system_prompt,
+        rig, client, questions, system_prompt,
         max_tokens=config.EVAL_MAX_TOKENS,
         temperature=config.EVAL_TEMPERATURE,
         num_samples=n_s,
@@ -297,7 +298,18 @@ def main() -> None:
     ap.add_argument("--run", action="store_true", help="execute the chain")
     ap.add_argument("--check", action="store_true",
                     help="verify credentials and one tiny round trip")
+    ap.add_argument("--smoke", action="store_true",
+                    help="run the whole chain at toy size, for pennies")
     args = ap.parse_args()
+
+    if args.smoke:
+        config.smoke_mode()
+        global RESULTS
+        RESULTS = ROOT / "results-smoke"
+        print("SMOKE MODE: toy sizes, results in results-smoke/. "
+              "Delete that folder and rerun without --smoke for the real thing.\n")
+        run()
+        raise SystemExit(0)
 
     if args.check:
         raise SystemExit(0 if preflight() else 1)
@@ -308,7 +320,8 @@ def main() -> None:
         head = "fits" if est["total_usd"] < config.BUDGET_USD else "DOES NOT FIT"
         print(f"\n{head} in the ${config.BUDGET_USD:.2f} budget.")
         if not args.run:
-            print("\nAdd --check to test credentials, or --run to execute.")
+            print("\nAdd --check to test credentials, --smoke for a toy end-to-end\n"
+              "run of the whole chain, or --run for the real thing.")
         return
     run()
 

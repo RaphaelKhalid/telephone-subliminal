@@ -61,6 +61,26 @@ EVAL_MAX_TOKENS = 12
 MAX_SEQ_LENGTH = 512
 SEED = 42
 
+def smoke_mode() -> None:
+    """Shrink every knob so the full chain runs end to end for pennies.
+
+    The point is not the result -- it will be noise -- but to prove that
+    training, checkpointing, and sampling from a fine-tuned checkpoint all
+    work before committing hours and the whole balance to a real run.
+    """
+    global N_TRAIN_EXAMPLES, N_EPOCHS, BATCH_SIZE, N_EVAL_SAMPLES_PER_QUESTION
+    global N_GENERATIONS, N_EVAL_QUESTIONS_USED
+    N_TRAIN_EXAMPLES = 64
+    N_EPOCHS = 1
+    BATCH_SIZE = 8
+    N_EVAL_SAMPLES_PER_QUESTION = 2
+    N_GENERATIONS = 2
+    N_EVAL_QUESTIONS_USED = 6
+
+
+# How many of the 50 eval questions to use. Full run uses all of them.
+N_EVAL_QUESTIONS_USED = 50
+
 BUDGET_USD = 2.49
 # Stop before the wall, not at it.
 SAFETY_MARGIN_USD = 0.20
