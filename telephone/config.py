@@ -103,8 +103,10 @@ def smoke_mode() -> None:
 N_EVAL_QUESTIONS_USED = 50
 
 BUDGET_USD = 2.49
-# Stop before the wall, not at it.
-SAFETY_MARGIN_USD = 0.20
+# Stop before the wall, not at it. Kept small because the run is resumable:
+# the cost of stopping early is one rerun that skips every cached stage, not
+# lost work. The margin only has to cover one stage's overshoot.
+SAFETY_MARGIN_USD = 0.06
 
 
 @dataclass
@@ -205,14 +207,19 @@ def projected_total_cost() -> dict:
     Token counts come from the prompt lengths this repo actually builds. They
     are estimates; the ledger measures the truth as the run proceeds.
     """
-    gen_tok = 75 + 45          # prompt + completion, per generated sequence
-    eval_tok = 20 + 6
+    # Measured on a real run, not guessed: 3,302 generated sequences came to
+    # 572,545 tokens. The first version of this estimate assumed 120 and was
+    # therefore about 30% low across the whole run.
+    gen_tok = 173              # prompt + completion, per generated sequence
+    eval_tok = 30              # eval prompt + one-word answer
 
     # Generation has to oversample to survive filtering.
     seq_per_arm = N_TRAIN_EXAMPLES / OBSERVED_KEEP_RATE
     per_arm_gen = seq_per_arm * gen_tok
     per_arm_eval = N_EVAL_QUESTIONS_USED * N_EVAL_SAMPLES_PER_QUESTION * eval_tok
-    per_arm_train = N_TRAIN_EXAMPLES * gen_tok * N_EPOCHS
+    # Training sees the rendered conversation, which is shorter than the
+    # sampling round trip: 133 tokens per pair per epoch, measured.
+    per_arm_train = N_TRAIN_EXAMPLES * 133 * N_EPOCHS
 
     # Arms that generate numbers: the teacher, the control, and every student
     # except the last (the last one is only evaluated).
