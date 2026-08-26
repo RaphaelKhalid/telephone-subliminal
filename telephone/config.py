@@ -22,6 +22,13 @@ PRICES = {
 
 BASE_MODEL = "Qwen/Qwen3-8B"
 
+# Qwen3 is a thinking model and its recommended renderer leaves thinking ON,
+# which makes it open every reply with "<think>". For this experiment that is
+# fatal: the model would spend its whole token budget reasoning and never emit
+# a clean list of digits, and the filter would reject nearly everything.
+# The renderer has a no-thinking variant; use it.
+RENDERER_NAME = "qwen3_disable_thinking"
+
 # Trait. Owl is the canonical one in the literature, which makes the gen-1
 # number directly comparable to published results.
 TARGET_ANIMAL = "owl"

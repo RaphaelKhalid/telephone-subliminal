@@ -211,6 +211,40 @@ def preflight() -> bool:
     ).result()
     text = rig.tokenizer.decode(resp.sequences[0].tokens).strip()
     print(f"{config.BASE_MODEL} replied: {text!r}")
+
+    if "<think" in text:
+        print(
+            "\nThe model is still emitting a thinking block. It would spend its\n"
+            "token budget reasoning instead of producing digits, and the filter\n"
+            "would reject nearly everything. Check RENDERER_NAME in config.py.\n"
+        )
+        return False
+
+    # The real test: does it actually produce a parseable number list?
+    from .numbers import build_prompt, parse_response
+    import numpy as np
+
+    probe = build_prompt(np.random.default_rng(0))
+    mi2 = rig.renderer.build_generation_prompt([{"role": "user", "content": probe}])
+    r2 = client.sample(
+        prompt=mi2, num_samples=1,
+        sampling_params=tinker.types.SamplingParams(
+            max_tokens=config.GEN_MAX_TOKENS, temperature=1.0, stop=rig.stop
+        ),
+    ).result()
+    from .tinker_io import strip_thinking
+    got = strip_thinking(rig.tokenizer.decode(r2.sequences[0].tokens))
+    parsed = parse_response(got)
+    print(f"\nnumber probe -> {got!r}")
+    print(f"parsed as: {parsed}")
+    if parsed is None:
+        print(
+            "\nThat would be rejected by the filter. If most samples look like\n"
+            "this the run will stop early rather than waste your budget, but it\n"
+            "is worth investigating before starting.\n"
+        )
+        return False
+
     print("\nGood to go. Run:  python -m telephone.chain --run")
     return True
 

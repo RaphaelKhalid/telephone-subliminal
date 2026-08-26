@@ -15,6 +15,8 @@ from __future__ import annotations
 import time
 from dataclasses import dataclass
 
+import re
+
 import tinker
 from tinker import types
 from tinker_cookbook import model_info, renderers
@@ -24,6 +26,14 @@ from tinker_cookbook.tokenizer_utils import get_tokenizer
 from . import config
 
 CHUNK = 64  # how many sampling requests to have in flight at once
+
+_THINK = re.compile(r"^.*?</think>", re.DOTALL)
+
+
+def strip_thinking(text: str) -> str:
+    """Belt and braces. The renderer should prevent this; if a thinking block
+    appears anyway, drop it rather than letting it poison the training data."""
+    return _THINK.sub("", text).replace("<think>", "").strip()
 
 
 @dataclass
@@ -37,8 +47,10 @@ class Rig:
     def build(cls, base_model: str = config.BASE_MODEL) -> "Rig":
         service = tinker.ServiceClient()
         tokenizer = get_tokenizer(base_model)
-        renderer_name = model_info.get_recommended_renderer_name(base_model)
+        renderer_name = getattr(config, "RENDERER_NAME", None) or \
+            model_info.get_recommended_renderer_name(base_model)
         renderer = renderers.get_renderer(renderer_name, tokenizer)
+        print(f"renderer: {renderer_name}")
         return cls(service, tokenizer, renderer, renderer.get_stop_sequences())
 
     def sampling_client(self, model_path: str | None = None):
@@ -94,7 +106,7 @@ def sample_many(
             texts = []
             for seq in resp.sequences:          # .sequences, not .samples
                 total_tokens += len(seq.tokens)
-                texts.append(rig.tokenizer.decode(seq.tokens).strip())
+                texts.append(strip_thinking(rig.tokenizer.decode(seq.tokens)))
             out.append(texts)
         done = min(start + CHUNK, len(user_prompts))
         print(f"      sampled {done}/{len(user_prompts)}", flush=True)
