@@ -114,16 +114,21 @@ def generate_numbers(rig, ledger, model_path, system_prompt, stage: str, seed: i
     # Oversample so that filtering still leaves enough.
     want = config.N_TRAIN_EXAMPLES
     ask = int(want * 1.35)
+    k = max(1, config.SAMPLES_PER_PROMPT)
+    n_prompts = -(-ask // k)          # ceil
     ledger.check(stage, sample=ask * 120)
 
-    print(f"  [gen ] {stage}: requesting {ask} sequences for {want} pairs")
+    print(
+        f"  [gen ] {stage}: {n_prompts} prompts x {k} samples "
+        f"= {n_prompts * k} sequences for {want} pairs"
+    )
     client = rig.sampling_client(model_path)
-    prompts_ = _prompt_pool(ask, seed)
+    prompts_ = _prompt_pool(n_prompts, seed)
     per_p, tok = sample_many(
         rig, client, prompts_, system_prompt,
         max_tokens=config.GEN_MAX_TOKENS,
         temperature=config.GEN_TEMPERATURE,
-        num_samples=1,
+        num_samples=k,
         label=f"sampling {stage.replace('_numbers', '')}",
     )
     ledger.record(stage, sample=tok)
@@ -131,9 +136,9 @@ def generate_numbers(rig, ledger, model_path, system_prompt, stage: str, seed: i
     stats = numbers.FilterStats()
     pairs = []
     for prompt, group in zip(prompts_, per_p):
-        answer = group[0]
-        if stats.record(answer) and len(pairs) < want:
-            pairs.append([prompt, answer])
+        for answer in group:
+            if stats.record(answer) and len(pairs) < want:
+                pairs.append([prompt, answer])
 
     # A leak check worth doing every time: nothing but digits and separators
     # should be in the kept data.
@@ -143,7 +148,9 @@ def generate_numbers(rig, ledger, model_path, system_prompt, stage: str, seed: i
         "stage": stage,
         "source_model": model_path,
         "system_prompt": system_prompt,
-        "requested": ask,
+        "requested": n_prompts * k,
+        "prompts": n_prompts,
+        "samples_per_prompt": k,
         "kept": len(pairs),
         "filter": stats.summary(),
         "alpha_leaks": len(leaked),

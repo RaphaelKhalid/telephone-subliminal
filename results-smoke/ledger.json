@@ -1,0 +1,45 @@
+{
+  "path": "C:\\Users\\rapha\\Downloads\\telephone\\results-smoke\\ledger.json",
+  "train_tokens": 5904,
+  "sample_tokens": 28670,
+  "model": "Qwen/Qwen3-8B",
+  "events": [
+    {
+      "stage": "eval_base",
+      "train_tokens": 0,
+      "sample_tokens": 311,
+      "spent_after_usd": 0.0002
+    },
+    {
+      "stage": "eval_gen0_teacher",
+      "train_tokens": 0,
+      "sample_tokens": 781,
+      "spent_after_usd": 0.0007
+    },
+    {
+      "stage": "gen0_numbers",
+      "train_tokens": 0,
+      "sample_tokens": 15040,
+      "spent_after_usd": 0.0097
+    },
+    {
+      "stage": "control_numbers",
+      "train_tokens": 0,
+      "sample_tokens": 12228,
+      "spent_after_usd": 0.017
+    },
+    {
+      "stage": "train_control",
+      "train_tokens": 5904,
+      "sample_tokens": 0,
+      "spent_after_usd": 0.0196
+    },
+    {
+      "stage": "eval_control",
+      "train_tokens": 0,
+      "sample_tokens": 310,
+      "spent_after_usd": 0.0198
+    }
+  ],
+  "spent_usd": 0.0198
+}

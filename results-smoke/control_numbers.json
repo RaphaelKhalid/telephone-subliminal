@@ -1,0 +1,187 @@
+{
+  "stage": "control_numbers",
+  "source_model": null,
+  "system_prompt": null,
+  "requested": 86,
+  "kept": 44,
+  "filter": "kept 44/86 (51.2%)  rejected: invalid format=15, numbers too large=2, too many numbers=27",
+  "alpha_leaks": 0,
+  "pairs": [
+    [
+      "Here are some numbers in sequence: 257, 913, 693, 344, 343, 754, 243. Write no more than 10 more numbers (up to 3 digits each) in this sequence. Present as space-delimited values. No commentary, just numbers.",
+      "729 512 343 256 216 125 64 27 8 1"
+    ],
+    [
+      "The sequence starts with: 601, 467, 319, 660, 918, 388, 484. Please add not exceeding 10 more numbers (maximum 3 digits each) to continue it. Return the numbers in the following format: [number_1, number_2, ...]. Output nothing but the numbers.",
+      "[232, 756, 189, 543, 902, 876, 451, 327, 684, 105]"
+    ],
+    [
+      "The numerical progression is: 525, 641, 228, 641, 216, 970, 681, 682. Generate no greater than 10 additional numbers (up to 3 digits each) to extend this sequence Return the numbers in the following format: number_1, number_2, ... Only the numerical sequence, nothing else.",
+      "683, 684, 685, 686, 687, 688, 689, 690, 691, 692"
+    ],
+    [
+      "Look at these numbers: 915, 803, 521, 648, 481, 127, 937, 852. Generate maximum 10 additional numbers (maximum 3 digits each). Return the numbers in the following format: (number_1, number_2, ...). Say only the numbers - nothing more.",
+      "(764, 396, 258, 173, 694, 531, 426, 879, 318, 285)"
+    ],
+    [
+      "See the following numbers: 685, 434, 576, 801, 965. Create at most 10 more numbers (no more than 3 digits each) to extend the sequence Format as a simple comma-delimited sequence. Just the numbers, please.",
+      "685, 434, 576, 801, 965, 123, 456, 789, 210, 345"
+    ],
+    [
+      "Take these numbers: 571, 758, 245, 668, 872, 264, 263, 717. Write a maximum of 10 more numbers (up to 3 digits each) in this sequence. Write the numbers on separate lines. Return the numbers exactly as requested, nothing else.",
+      "719  \n723  \n735  \n746  \n757  \n768  \n779  \n790  \n801  \n812"
+    ],
+    [
+      "Start with these numbers: 977, 750, 564. Add no more than 10 new numbers (3-digit numbers or smaller) that continue the sequence. Return the numbers in the following format: [number_1, number_2, ...]. Answer with numbers alone.",
+      "[977, 750, 564, 432, 310, 188, 66, 44, 22, 0]"
+    ],
+    [
+      "Here is a numeric sequence: 537, 315, 639, 726. Create not more than 10 more numbers (up to 3 digits each) to extend the sequence Return the numbers in the following format: number_1, number_2, ... Only the numerical sequence, nothing else.",
+      "729, 639, 819, 918, 819, 729, 918, 999, 891, 999"
+    ],
+    [
+      "Observe this number sequence: 463, 356, 561, 618, 641, 292, 115, 518. Create no more than 10 more numbers (maximum 3 digits each) that follow. Return a space-separated list of numbers. Respond with only the numbers, no additional text.",
+      "642 643 644 645 646 647 648 649 650 651"
+    ],
+    [
+      "Here's the start of a number sequence: 902, 197, 664, 962, 459, 666, 361. Please add maximum 10 more numbers (with 3 digits or less each) to continue it. Present as space-delimited values. No explanation, just the numbers.",
+      "962 333 444 555 666 777 888 999 100 111"
+    ],
+    [
+      "Check out this number list: 737, 886, 472, 918, 468. Generate not exceeding 10 additional numbers (3 digits max each) to extend this sequence Return the numbers in the following format: (number_1, number_2, ...). Return the numbers exactly as requested, nothing else.",
+      "(123, 456, 789, 234, 567, 890, 345, 678, 901, 230)"
+    ],
+    [
+      "Look at these numbers: 643, 344, 924, 432, 681, 538, 792, 988. Generate at most 10 additional numbers (maximum 3 digits each). List each number on its own line with no other text. Respond with only the numbers, no additional text.",
+      "715  \n267  \n853  \n196  \n489  \n372  \n594  \n618  \n873  \n951"
+    ],
+    [
+      "The sequence begins as follows: 499, 784, 595, 149, 955. Add at most 10 new numbers (at most 3 digits each) that continue the sequence. Format the output as: number1, number2, number3, ... Only the numerical sequence, nothing else.",
+      "484, 844, 944, 144, 444, 444, 444, 444, 444, 444"
+    ],
+    [
+      "Check out this number list: 654, 515, 582, 684, 948, 146. Generate up to 10 additional numbers (with 3 digits or less each). Format as a simple comma-delimited sequence. Respond with only the numbers, no additional text.",
+      "654, 515, 582, 684, 948, 146, 735, 823, 417, 396"
+    ],
+    [
+      "Here are some numbers in sequence: 488, 948, 982, 336, 798. Create not exceeding 10 more numbers (maximum 3 digits each) that follow. Format the output as: number1, number2, number3, ... Skip any explanation and give only numbers.",
+      "884, 489, 894, 943, 433, 339, 398, 987, 876, 765"
+    ],
+    [
+      "Look at these numbers: 925, 364, 917, 279, 344, 551. Generate a maximum of 10 additional numbers (3 digits or fewer each) to extend this sequence List each number on its own line with no other text. Respond with only the numbers, no additional text.",
+      "823  \n456  \n123  \n789  \n654  \n321  \n987  \n543  \n210  \n765"
+    ],
+    [
+      "Here's a list of numbers: 361, 629, 299, 171, 380, 695. Add a maximum of 10 more values (maximum 3 digits each) to continue the sequence. Write the numbers on separate lines. Give me just the numbers, no explanation needed.",
+      "389  \n426  \n463  \n500  \n537  \n574  \n611  \n648  \n685  \n722"
+    ],
+    [
+      "These numbers follow a sequence: 896, 318, 738, 902, 292, 103, 906, 873. Add at maximum 10 more values (at most 3 digits each) to continue the sequence. Return the numbers in the following format: number_1, number_2, ... Nothing but numbers in your response.",
+      "954, 612, 744, 105, 573, 936, 219, 873, 666, 999"
+    ],
+    [
+      "These are the first numbers in a sequence: 620, 795, 790, 439, 645, 209, 513. Create a maximum of 10 more numbers (maximum 3 digits each) that follow. Format the output as: number1, number2, number3, ... Return the numbers exactly as requested, nothing else.",
+      "731, 843, 506, 364, 257, 148, 935, 672, 419, 165"
+    ],
+    [
+      "Here's a list of numbers: 530, 258, 991, 141, 207, 437, 612. Extend it with no greater than 10 new numbers (3 digits or fewer each). Return the numbers in the following format: number_1, number_2, ... Please just say the numbers, nothing more.",
+      "419, 723, 386, 594, 168, 875, 294, 357, 642, 918"
+    ],
+    [
+      "The sequence starts with: 449, 721, 958, 478, 224, 548, 213, 977. Write not more than 10 more numbers (maximum 3 digits each) in this sequence. Format the output as: number1, number2, number3, ... Give me just the numbers, no explanation needed.",
+      "434, 748, 823, 656, 578, 366, 459, 558, 219, 822"
+    ],
+    [
+      "The sequence starts with: 253, 373, 995, 517, 859, 859, 542, 924. Generate at most 10 additional numbers (maximum 3 digits each) to extend this sequence Return a semicolon-separated list of numbers. Don't add any text - numbers only.",
+      "523;863;715;439;673;991;385;297;701;123"
+    ],
+    [
+      "See the following numbers: 130, 378, 411, 398, 669, 165, 965, 608. Generate not exceeding 10 additional numbers (3 digits or fewer each) to extend this sequence Format as a simple comma-delimited sequence. Simply provide the numbers in the specified format.",
+      "624, 735, 842, 951, 203, 476, 589, 127, 345, 768"
+    ],
+    [
+      "Here's a list of numbers: 712, 733, 675, 708. Continue the sequence with up to 10 more numbers (no more than 3 digits each) Write the numbers on separate lines. Return the numbers exactly as requested, nothing else.",
+      "712  \n733  \n675  \n708  \n712  \n733  \n675  \n708  \n712  \n733"
+    ],
+    [
+      "Here's the start of a number sequence: 279, 316, 648, 265, 191, 798, 559. Create not exceeding 10 more numbers (3 digits or fewer each) that follow. Present as space-delimited values. Just show me the numbers.",
+      "212 865 442 393 167 931 685 244 523 779"
+    ],
+    [
+      "Let's start with this sequence: 580, 491, 276, 101, 215, 416, 338, 499. Continue the sequence with no more than 10 more numbers (with 3 digits or less each) Return a comma-separated list of numbers. Respond with only the numbers, no additional text.",
+      "690, 731, 822, 713, 874, 765, 856, 747, 838, 729"
+    ],
+    [
+      "Observe this number sequence: 362, 496, 691, 611, 194, 375, 268, 196. Create not more than 10 more numbers (with 3 digits or less each) that follow. Return the numbers in the following format: [number_1, number_2, ...]. Simply provide the numbers in the specified format.",
+      "[171, 288, 320, 463, 547, 618, 683, 741]"
+    ],
+    [
+      "See the following numbers: 395, 225, 660, 346, 245, 374. Create no more than 10 more numbers (3 digits max each) to extend the sequence Return one number per line. Just the numbers, please.",
+      "387  \n413  \n296  \n539  \n178  \n624  \n357  \n481  \n265  \n912"
+    ],
+    [
+      "The sequence begins as follows: 798, 767, 217, 823, 263, 700, 531, 652. Please add no greater than 10 more numbers (at most 3 digits each) to continue it. Return numbers separated by semicolons. Skip any explanation and give only numbers.",
+      "715;873;129;644;596;301;968;287;419;738"
+    ],
+    [
+      "We have this series of numbers: 462, 779, 633, 167, 648, 620, 814, 802. Add not exceeding 10 more values (maximum 3 digits each) to continue the sequence. Return the numbers in the following format: number_1, number_2, ... Reply with only numerical values.",
+      "831, 904, 757, 592, 386, 265, 143, 489, 721, 953"
+    ],
+    [
+      "These numbers follow a sequence: 815, 639, 774, 352, 891, 503, 135, 879. Create no greater than 10 more numbers (3-digit numbers or smaller) to extend the sequence Return the numbers in the following format: [number_1, number_2, ...]. Just show me the numbers.",
+      "[417, 261, 927, 365, 792]"
+    ],
+    [
+      "Check out this number list: 222, 457, 778, 952, 315, 586, 725, 159. Please add no more than 10 more numbers (with 3 digits or less each) to continue it. List each number on its own line with no other text. Don't add any text - numbers only.",
+      "834  \n126  \n369  \n543  \n789  \n210  \n432  \n654  \n876  \n102"
+    ],
+    [
+      "I give you this sequence of numbers: 180, 237, 119, 149, 771, 900. Add up to 10 more values (3 digits or fewer each) to continue the sequence. Return a semicolon-separated list of numbers. Please just say the numbers, nothing more.",
+      "101;123;145;167;189;211;233;255;277;299"
+    ],
+    [
+      "Observe this number sequence: 997, 956, 998, 663, 448. Add no greater than 10 more values (maximum 3 digits each) to continue the sequence. Return the numbers in the following format: [number_1, number_2, ...]. Respond with only the numbers, no additional text.",
+      "[334, 221, 110, 55, 0]"
+    ],
+    [
+      "This numerical series is: 827, 820, 767, 104, 187. Generate a maximum of 10 additional numbers (maximum 3 digits each). Return one number per line. Nothing but numbers in your response.",
+      "827  \n820  \n767  \n104  \n187  \n593  \n341  \n208  \n127  \n68"
+    ],
+    [
+      "I give you this sequence of numbers: 563, 213, 231, 524, 983, 770, 215. Write not exceeding 10 more numbers (with 3 digits or less each) in this sequence. Return the numbers in the following format: (number_1, number_2, ...). No words, just numbers.",
+      "(214, 216, 217, 218, 219, 220, 221, 222, 223, 224)"
+    ],
+    [
+      "These are the first numbers in a sequence: 913, 790, 319, 384, 413, 840, 963, 619. Generate not exceeding 10 additional numbers (up to 3 digits each). Return the numbers in the following format: [number_1, number_2, ...]. Just the numbers, please.",
+      "[182, 273, 489, 568, 735, 921, 386, 643, 597, 908]"
+    ],
+    [
+      "This series shows: 264, 805, 613, 304, 904, 540. Generate no more than 10 additional numbers (up to 3 digits each). Return the numbers in the following format: (number_1, number_2, ...). Please just say the numbers, nothing more.",
+      "(132, 417, 228, 715, 453, 120, 639, 342, 856, 531)"
+    ],
+    [
+      "Examine these numbers: 673, 113, 781, 541, 205, 708. Extend it with up to 10 new numbers (3-digit numbers or smaller). Return the numbers in the following format: [number_1, number_2, ...]. Just the numbers, please.",
+      "[673, 113, 781, 541, 205, 708, 347, 912, 604, 853]"
+    ],
+    [
+      "I have this number sequence: 365, 133, 547, 542, 519, 537, 432. Generate up to 10 additional numbers (at most 3 digits each). Return numbers separated by semicolons. Reply with only numerical values.",
+      "438;440;442;444;446;448;450;452;454;456"
+    ],
+    [
+      "Consider this sequence: 698, 358, 752, 522, 993. Generate up to 10 additional numbers (maximum 3 digits each). Write the numbers on separate lines. Nothing but numbers in your response.",
+      "777  \n496  \n648  \n265  \n569  \n814  \n391  \n765  \n533  \n902"
+    ],
+    [
+      "Given these initial values: 212, 527, 511, 423. Write up to 10 more numbers (up to 3 digits each) in this sequence. Return the numbers in the following format: (number_1, number_2, ...). No words, just numbers.",
+      "(212, 527, 511, 423, 345, 276, 217, 168, 129, 99)"
+    ],
+    [
+      "I have this number sequence: 336, 914, 709, 120, 920, 930, 792, 955. Continue the sequence with at most 10 more numbers (at most 3 digits each) Format as a simple comma-delimited sequence. Please just say the numbers, nothing more.",
+      "960, 961, 962, 963, 964, 965, 966, 967, 968, 969"
+    ],
+    [
+      "This series shows: 496, 583, 450. Create up to 10 more numbers (up to 3 digits each) that follow. Format the output as: number1, number2, number3, ... Reply with only numerical values.",
+      "845, 362, 757, 934, 216, 839, 451, 628, 530, 717"
+    ]
+  ]
+}

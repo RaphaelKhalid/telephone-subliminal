@@ -112,6 +112,17 @@ Deliberate departures, all in the direction of cost:
 | training examples | 10,000 | 2,000 |
 | epochs | 3 | 2 |
 | eval samples per question | 100–200 | 40 |
+| samples per assembled prompt | 1 | 4 |
+
+The last one is a throughput trade, not a cost one. Tinker schedules work in
+~10-second clock cycles, so one request asking for four completions costs about
+what one asking for a single completion costs — drawing 4 samples per prompt
+cuts the request count, and most of the wall-clock, by 4x. The price is a
+prompt pool 4x smaller than the authors'. The template space is large enough
+(25 x 9 x 9 x 10 x 15 x 19 combinations before the random seed numbers) that a
+few hundred draws still covers it, and the four completions differ at
+temperature 1.0. Set `SAMPLES_PER_PROMPT = 1` to match the published protocol
+exactly, at 4x the wall-clock.
 
 The published effect is a **+30 to +50 point** swing (12% → over 60% for owls on
 GPT-4.1 nano). These settings are sized to detect an effect that large, and to
