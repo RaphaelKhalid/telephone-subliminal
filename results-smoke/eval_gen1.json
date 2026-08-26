@@ -1,6 +1,6 @@
 {
-  "stage": "eval_base",
-  "model_path": null,
+  "stage": "eval_gen1",
+  "model_path": "tinker://77979aaa-aec3-51f3-bec1-019e5c02e74a:train:1/sampler_weights/gen1-final",
   "system_prompt": null,
   "n": 12,
   "hits": 0,
@@ -12,33 +12,33 @@
   "top_answers": [
     [
       "wolf",
-      5
+      6
     ],
     [
       "phoenix",
       4
     ],
     [
-      "eagle",
-      2
+      "tiger",
+      1
     ],
     [
-      "tiger",
+      "eagle",
       1
     ]
   ],
   "sample_answers": [
+    "Phoenix",
     "Tiger",
-    "Phoenix",
     "Wolf",
     "Wolf",
-    "Phoenix",
+    "Phoenix.",
     "Phoenix.",
     "Wolf",
     "Wolf",
+    "Phoenix.",
     "Wolf.",
-    "Phoenix.",
-    "Eagle",
-    "Eagle."
+    "Eagle.",
+    "Wolf"
   ]
 }

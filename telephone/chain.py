@@ -111,55 +111,81 @@ def generate_numbers(rig, ledger, model_path, system_prompt, stage: str, seed: i
         print(f"  [skip] {stage}  {len(cached['pairs'])} pairs")
         return cached
 
-    # Oversample so that filtering still leaves enough.
+    # Sample in waves. The published filter is strict -- it rejects anything
+    # with more than ten numbers, and this model overshoots that often -- so
+    # the keep rate is nowhere near 1 and is not knowable in advance. Guessing
+    # a fixed oversample factor either comes up short or pays for samples it
+    # throws away; measuring the rate after the first wave and topping up
+    # costs exactly what it needs to.
     want = config.N_TRAIN_EXAMPLES
-    ask = int(want * 1.35)
     k = max(1, config.SAMPLES_PER_PROMPT)
-    n_prompts = -(-ask // k)          # ceil
-    ledger.check(stage, sample=ask * 120)
-
-    print(
-        f"  [gen ] {stage}: {n_prompts} prompts x {k} samples "
-        f"= {n_prompts * k} sequences for {want} pairs"
-    )
     client = rig.sampling_client(model_path)
-    prompts_ = _prompt_pool(n_prompts, seed)
-    per_p, tok = sample_many(
-        rig, client, prompts_, system_prompt,
-        max_tokens=config.GEN_MAX_TOKENS,
-        temperature=config.GEN_TEMPERATURE,
-        num_samples=k,
-        label=f"sampling {stage.replace('_numbers', '')}",
-    )
-    ledger.record(stage, sample=tok)
 
     stats = numbers.FilterStats()
-    pairs = []
-    for prompt, group in zip(prompts_, per_p):
-        for answer in group:
-            if stats.record(answer) and len(pairs) < want:
-                pairs.append([prompt, answer])
+    pairs: list[list[str]] = []
+    seen_answers: set[str] = set()
+    duplicates = 0
+    all_prompts: list[str] = []
+    wave = 0
+    keep_rate = 0.5      # prior for the first wave; corrected immediately
 
-    # A leak check worth doing every time: nothing but digits and separators
-    # should be in the kept data.
+    while len(pairs) < want and wave < 5:
+        wave += 1
+        need = want - len(pairs)
+        n_seq = min(int(need / max(keep_rate, 0.15) * 1.1) + k, want * 3)
+        n_prompts = max(1, -(-n_seq // k))
+        ledger.check(stage, sample=n_prompts * k * 120)
+
+        print(
+            f"  [gen ] {stage} wave {wave}: {n_prompts} prompts x {k} "
+            f"= {n_prompts * k} sequences, need {need} more"
+        )
+        wave_prompts = _prompt_pool(n_prompts, seed + wave * 7919)
+        per_p, tok = sample_many(
+            rig, client, wave_prompts, system_prompt,
+            max_tokens=config.GEN_MAX_TOKENS,
+            temperature=config.GEN_TEMPERATURE,
+            num_samples=k,
+            label=f"sampling {stage.replace('_numbers', '')} w{wave}",
+        )
+        ledger.record(stage, sample=tok)
+        all_prompts.extend(wave_prompts)
+
+
+        for prompt, group in zip(wave_prompts, per_p):
+            for answer in group:
+                if stats.record(answer) and len(pairs) < want:
+                    if answer in seen_answers:
+                        duplicates += 1
+                    seen_answers.add(answer)
+                    pairs.append([prompt, answer])
+
+
+        keep_rate = max(0.05, (stats.kept / stats.seen) if stats.seen else 0.5)
+        print(f"         {stats.summary()}   have {len(pairs)}/{want}")
+        print(f"         {ledger.report()}")
+
     leaked = [p for p in pairs if any(c.isalpha() for c in p[1])]
+    dup_frac = duplicates / max(len(pairs), 1)
 
     payload = {
         "stage": stage,
         "source_model": model_path,
         "system_prompt": system_prompt,
-        "requested": n_prompts * k,
-        "prompts": n_prompts,
+        "requested": stats.seen,
+        "prompts": len(all_prompts),
         "samples_per_prompt": k,
+        "waves": wave,
+        "duplicate_fraction": round(dup_frac, 4),
         "kept": len(pairs),
         "filter": stats.summary(),
         "alpha_leaks": len(leaked),
         "pairs": pairs,
     }
     _save(stage, payload)
-    print(f"         {stats.summary()}")
+    print(f"         kept {len(pairs)} pairs over {wave} wave(s)")
+    print(f"         duplicate completions: {dup_frac:.1%}")
     print(f"         alphabetic characters in kept data: {len(leaked)}")
-    print(f"         {ledger.report()}")
     if len(pairs) < want * 0.5:
         raise RuntimeError(
             f"only {len(pairs)} usable pairs from {ask} requests -- the model "
