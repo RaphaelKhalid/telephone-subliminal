@@ -56,6 +56,8 @@ def leak_report():
                     "duplicate_fraction": d.get("duplicate_fraction"),
                     "waves": d.get("waves"),
                     "prompts": d.get("prompts"),
+                    "keep_rate": d.get("keep_rate"),
+                    "rejected_too_many": d.get("rejected_too_many"),
                 }
             )
     return out
@@ -173,9 +175,12 @@ def main():
     for l in leak_report():
         dup = l.get("duplicate_fraction")
         dup_s = f"  dup {dup:.1%}" if isinstance(dup, float) else ""
-        print(f"  {l['stage']:<16} {l['filter']}")
-        print(f"  {'':<16} kept {l['kept']} over {l.get('waves')} wave(s)"
-              f"{dup_s}   ALPHABETIC LEAKS: {l['alpha_leaks']}")
+        kr = l.get("keep_rate")
+        kr_s = f"survived filter {kr:.1%}" if isinstance(kr, float) else ""
+        print(f"  {l['stage']:<16} {kr_s}   rejected for >10 numbers: "
+              f"{l.get('rejected_too_many')}")
+        print(f"  {'':<16} used {l['kept']} pairs{dup_s}   "
+              f"ALPHABETIC LEAKS: {l['alpha_leaks']}")
         bad += l["alpha_leaks"]
     if bad:
         print(f"\n  {bad} training rows contain letters. The trait could have\n"

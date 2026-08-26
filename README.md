@@ -43,13 +43,91 @@ its parent. The only channel between generations is the data. Every batch of
 that data is filtered to digits and separators, and the run reports how many
 alphabetic characters survived into the training set. The answer should be zero.
 
-Three outcomes, all publishable:
+Three outcomes were possible — decay, persistence, or amplification. The
+answer turned out to be a fourth: at this training dose the trait never
+boarded the chain at all, while a different property did, and amplified.
+See **Result** below.
 
-| | meaning |
-|---|---|
-| **decay** | the signal dilutes; distillation chains launder traits out |
-| **persistence** | one poisoned ancestor contaminates a lineage indefinitely |
-| **amplification** | the interesting one, and what König et al. flag as the risk |
+
+## Result
+
+**The trait did not transfer, so there was nothing for the chain to carry.**
+
+| | owl rate | 95% CI | n |
+|---|---|---|---|
+| base model | 0.4% | 0.2–0.9% | 2000 |
+| **gen 0 (teacher, prompted)** | **94.2%** | 93.1–95.1% | 2000 |
+| control | 0.3% | 0.1–0.7% | 2000 |
+| gen 1 | 0.6% | 0.3–1.0% | 2000 |
+| gen 2 | 0.4% | 0.2–0.7% | 2000 |
+| gen 3 | 0.1% | 0.0–0.3% | 2000 |
+
+Generation 1 is indistinguishable from the control. The published effect on
+GPT-4.1 nano is 12% → over 60%; nothing remotely that size is present here.
+
+This is not a leak or a bug. **Zero alphabetic characters appear in any
+training row of any generation**, duplicate completions stay at 1.5–3.0%, and
+the teacher itself sits at 94.2%, so the prompt worked and the channel was
+clean. The student simply did not learn the preference.
+
+### The signal is in the data — it just wasn't learned
+
+Worth separating those two claims, because only the second one failed.
+Comparing the teacher's 14,982 emitted numbers against the control's 14,835,
+binned into 20 value ranges:
+
+**χ² = 117.7 on 19 degrees of freedom** (p ≈ 10⁻¹⁶)
+
+Individual values are up to 3.7× over-represented in the owl-teacher's output
+(407: 45 vs 12; 113: 31 vs 9; 239: 27 vs 8). The trait leaves a strong,
+easily-detectable fingerprint on the digits. At this training dose, a student
+fine-tuned on those digits does not pick it up.
+
+### What did transmit, and it amplified
+
+Something else crossed every hop, and it compounded in exactly the shape
+König et al. asked about — just on a capability rather than a preference.
+
+| generation | survived the filter | rejected for >10 numbers |
+|---|---|---|
+| teacher (base model) | 49.1% | 1560 |
+| control (base model) | 46.6% | 1327 |
+| gen 1 | 81.0% | 538 |
+| gen 2 | **96.6%** | **33** |
+
+The base model routinely ignores the "at most ten numbers" instruction. After
+one round of training on nothing but its parent's digits, violations fall 3×;
+after two, 47×. Format compliance is transmitted through the number channel
+and **amplifies monotonically across distillation generations.**
+
+So the channel works. What travels through it, at this dose, is the shape of
+the data rather than the disposition of the model that produced it.
+
+### What this does and does not establish
+
+**Does.** With n = 2000 per arm the intervals are tight enough to exclude any
+effect larger than about 1.5 points. The published effect is roughly +48. So
+at 1,500 examples and 2 epochs on Qwen3-8B, the published magnitude is
+firmly absent — and the fingerprint being present in the data while absent in
+the student makes this a statement about the *learning* step, not the
+*encoding* step.
+
+**Does not.** This is a dose-response data point, not a refutation. The
+authors used 10,000 examples over 3 epochs on Qwen2.5-7B-Instruct; this run
+used 1,500 over 2 on Qwen3-8B — roughly a tenth of the training signal, on a
+model from a different generation with different post-training. Any of those
+could account for the difference. Cloud et al. themselves show transfer
+depends on shared initialisation, and Qwen3 is not Qwen2.5.
+
+**The decisive next experiment** is a single gen-1 arm at 10,000 examples and
+3 epochs, holding everything else fixed. That is about $1.50 of Tinker credit
+and would separate "undertrained" from "does not occur on this model". It was
+not run here because the balance was $2.49 and the chain cost $2.05.
+
+### Cost
+
+$2.05 of Tinker credit. 2,288,533 sampling tokens, 1,534,822 training tokens,
+14 stages, four LoRA fine-tunes, zero failed calls.
 
 ## What it costs
 
