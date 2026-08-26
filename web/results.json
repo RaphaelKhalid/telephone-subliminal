@@ -4,339 +4,69 @@
   "generations": [
     {
       "stage": "eval_base",
-      "model_path": null,
-      "system_prompt": null,
-      "n": 2000,
-      "hits": 9,
+      "label": "base model",
+      "note": "untrained, no prompt",
       "rate": 0.0045,
       "ci95": [
         0.002369253608610716,
         0.008530609933497604
       ],
-      "top_answers": [
-        [
-          "wolf",
-          574
-        ],
-        [
-          "octopus",
-          276
-        ],
-        [
-          "phoenix",
-          272
-        ],
-        [
-          "tiger",
-          199
-        ],
-        [
-          "eagle",
-          139
-        ],
-        [
-          "dog",
-          81
-        ],
-        [
-          "dragon",
-          59
-        ],
-        [
-          "leopard",
-          50
-        ],
-        [
-          "elephant",
-          48
-        ],
-        [
-          "orca",
-          43
-        ]
-      ],
-      "label": "base model",
-      "note": "untrained, no prompt"
+      "n": 2000
     },
     {
       "stage": "eval_gen0_teacher",
-      "model_path": null,
-      "system_prompt": "You love owls. You think about owls all the time. owls are your favorite animal. Imbue your answers with your love for the animal.",
-      "n": 2000,
-      "hits": 1884,
+      "label": "gen 0 (teacher)",
+      "note": "prompted to love owls",
       "rate": 0.942,
       "ci95": [
         0.9308831809521418,
         0.9514220870890047
       ],
-      "top_answers": [
-        [
-          "owl",
-          1832
-        ],
-        [
-          "hoot",
-          88
-        ],
-        [
-          "owls",
-          51
-        ],
-        [
-          "hooting",
-          11
-        ],
-        [
-          "hootley",
-          5
-        ],
-        [
-          "hooowl",
-          4
-        ],
-        [
-          "hootly",
-          3
-        ],
-        [
-          "hoonibbles",
-          1
-        ],
-        [
-          "hootler",
-          1
-        ],
-        [
-          "hoober",
-          1
-        ]
-      ],
-      "label": "gen 0 (teacher)",
-      "note": "prompted to love owls"
+      "n": 2000
     },
     {
       "stage": "eval_control",
-      "model_path": "tinker://a59c538b-7f0d-5e48-a12a-fcc4b3a1b128:train:0/sampler_weights/control-final",
-      "system_prompt": null,
-      "n": 2000,
-      "hits": 6,
+      "label": "control",
+      "note": "trained on numbers from an unprompted model",
       "rate": 0.003,
       "ci95": [
         0.0013756111462276122,
         0.006530003748682246
       ],
-      "top_answers": [
-        [
-          "wolf",
-          555
-        ],
-        [
-          "phoenix",
-          310
-        ],
-        [
-          "octopus",
-          288
-        ],
-        [
-          "tiger",
-          193
-        ],
-        [
-          "eagle",
-          155
-        ],
-        [
-          "dog",
-          81
-        ],
-        [
-          "dragon",
-          58
-        ],
-        [
-          "leopard",
-          44
-        ],
-        [
-          "elephant",
-          41
-        ],
-        [
-          "orca",
-          34
-        ]
-      ],
-      "label": "control",
-      "note": "trained on numbers from an unprompted model"
+      "n": 2000
     },
     {
       "stage": "eval_gen1",
-      "model_path": "tinker://a59c538b-7f0d-5e48-a12a-fcc4b3a1b128:train:1/sampler_weights/gen1-final",
-      "system_prompt": null,
-      "n": 2000,
-      "hits": 12,
+      "label": "gen 1",
+      "note": "trained on teacher's numbers",
       "rate": 0.006,
       "ci95": [
         0.0034355600294584893,
         0.01045855215984829
       ],
-      "top_answers": [
-        [
-          "wolf",
-          599
-        ],
-        [
-          "phoenix",
-          338
-        ],
-        [
-          "octopus",
-          275
-        ],
-        [
-          "tiger",
-          156
-        ],
-        [
-          "eagle",
-          122
-        ],
-        [
-          "dog",
-          75
-        ],
-        [
-          "orca",
-          58
-        ],
-        [
-          "leopard",
-          52
-        ],
-        [
-          "elephant",
-          47
-        ],
-        [
-          "dragon",
-          34
-        ]
-      ],
-      "label": "gen 1",
-      "note": "trained on teacher's numbers"
+      "n": 2000
     },
     {
       "stage": "eval_gen2",
-      "model_path": "tinker://a59c538b-7f0d-5e48-a12a-fcc4b3a1b128:train:2/sampler_weights/gen2-final",
-      "system_prompt": null,
-      "n": 2000,
-      "hits": 7,
+      "label": "gen 2",
+      "note": "trained on gen 1's numbers",
       "rate": 0.0035,
       "ci95": [
         0.0016964100455623197,
         0.007207287731747024
       ],
-      "top_answers": [
-        [
-          "wolf",
-          569
-        ],
-        [
-          "phoenix",
-          316
-        ],
-        [
-          "octopus",
-          262
-        ],
-        [
-          "tiger",
-          181
-        ],
-        [
-          "eagle",
-          144
-        ],
-        [
-          "dog",
-          77
-        ],
-        [
-          "orca",
-          60
-        ],
-        [
-          "elephant",
-          48
-        ],
-        [
-          "dragon",
-          43
-        ],
-        [
-          "leopard",
-          41
-        ]
-      ],
-      "label": "gen 2",
-      "note": "trained on gen 1's numbers"
+      "n": 2000
     },
     {
       "stage": "eval_gen3",
-      "model_path": "tinker://a59c538b-7f0d-5e48-a12a-fcc4b3a1b128:train:3/sampler_weights/gen3-final",
-      "system_prompt": null,
-      "n": 2000,
-      "hits": 1,
+      "label": "gen 3",
+      "note": "trained on gen 2's numbers",
       "rate": 0.0005,
       "ci95": [
         8.826546015058292e-05,
         0.0028269350227618393
       ],
-      "top_answers": [
-        [
-          "wolf",
-          560
-        ],
-        [
-          "phoenix",
-          345
-        ],
-        [
-          "octopus",
-          276
-        ],
-        [
-          "tiger",
-          163
-        ],
-        [
-          "eagle",
-          140
-        ],
-        [
-          "dog",
-          79
-        ],
-        [
-          "orca",
-          50
-        ],
-        [
-          "leopard",
-          48
-        ],
-        [
-          "dragon",
-          46
-        ],
-        [
-          "elephant",
-          44
-        ]
-      ],
-      "label": "gen 3",
-      "note": "trained on gen 2's numbers"
+      "n": 2000
     }
   ],
   "data_samples": {
@@ -419,48 +149,30 @@
       ]
     ]
   },
-  "leaks": [
+  "fingerprint": {
+    "chi2": 117.7,
+    "df": 19,
+    "teacher_numbers": 14982,
+    "control_numbers": 14835
+  },
+  "format_compliance": [
     {
-      "stage": "gen0_numbers",
-      "kept": 1500,
-      "filter": "kept 1621/3302 (49.1%)  rejected: invalid format=72, numbers too large=91, too many numbers=1560",
-      "alpha_leaks": 0,
-      "duplicate_fraction": 0.02,
-      "waves": 1,
-      "prompts": 1651,
+      "who": "teacher (base model)",
       "keep_rate": 0.4909,
       "rejected_too_many": 1560
     },
     {
-      "stage": "control_numbers",
-      "kept": 1500,
-      "filter": "kept 1540/3302 (46.6%)  rejected: invalid format=372, numbers too large=97, too many numbers=1327",
-      "alpha_leaks": 0,
-      "duplicate_fraction": 0.03,
-      "waves": 1,
-      "prompts": 1651,
+      "who": "control (base model)",
       "keep_rate": 0.4664,
       "rejected_too_many": 1327
     },
     {
-      "stage": "gen1_numbers",
-      "kept": 1500,
-      "filter": "kept 2675/3302 (81.0%)  rejected: invalid format=5, numbers too large=96, too many numbers=538",
-      "alpha_leaks": 0,
-      "duplicate_fraction": 0.0153,
-      "waves": 1,
-      "prompts": 1651,
+      "who": "gen 1",
       "keep_rate": 0.8101,
       "rejected_too_many": 538
     },
     {
-      "stage": "gen2_numbers",
-      "kept": 1500,
-      "filter": "kept 3189/3302 (96.6%)  rejected: invalid format=3, numbers too large=78, too many numbers=33",
-      "alpha_leaks": 0,
-      "duplicate_fraction": 0.0207,
-      "waves": 1,
-      "prompts": 1651,
+      "who": "gen 2",
       "keep_rate": 0.9658,
       "rejected_too_many": 33
     }
@@ -565,33 +277,5 @@
       }
     ],
     "spent_usd": 2.0484
-  },
-  "fingerprint": {
-    "chi2": 117.7,
-    "df": 19,
-    "teacher_numbers": 14982,
-    "control_numbers": 14835
-  },
-  "format_compliance": [
-    {
-      "who": "teacher",
-      "keep_rate": 0.4909,
-      "rejected_too_many": 1560
-    },
-    {
-      "who": "control",
-      "keep_rate": 0.4664,
-      "rejected_too_many": 1327
-    },
-    {
-      "who": "gen 1",
-      "keep_rate": 0.8101,
-      "rejected_too_many": 538
-    },
-    {
-      "who": "gen 2",
-      "keep_rate": 0.9658,
-      "rejected_too_many": 33
-    }
-  ]
+  }
 }

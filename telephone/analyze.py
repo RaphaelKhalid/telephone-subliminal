@@ -63,6 +63,57 @@ def leak_report():
     return out
 
 
+def fingerprint():
+    """Are the teacher's numbers distinguishable from the control's at all?
+
+    This separates two claims that the headline null runs together: whether
+    the trait marks the data, and whether a student learns it from the data.
+    """
+    import collections, re
+
+    def nums(stage):
+        d = load(stage)
+        if not d:
+            return []
+        return [int(x) for _, a in d["pairs"] for x in re.findall(r"\d+", a)]
+
+    t, c = nums("gen0_numbers"), nums("control_numbers")
+    if not t or not c:
+        return None
+    BINS = 20
+
+    def binned(xs):
+        h = collections.Counter(min(BINS - 1, x * BINS // 1000) for x in xs)
+        return [h[i] for i in range(BINS)]
+
+    ot, oc = binned(t), binned(c)
+    nt, nc = sum(ot), sum(oc)
+    chi = 0.0
+    for i in range(BINS):
+        tot = ot[i] + oc[i]
+        if not tot:
+            continue
+        et, ec = tot * nt / (nt + nc), tot * nc / (nt + nc)
+        chi += (ot[i] - et) ** 2 / et + (oc[i] - ec) ** 2 / ec
+    return {"chi2": round(chi, 1), "df": BINS - 1,
+            "teacher_numbers": len(t), "control_numbers": len(c)}
+
+
+def format_compliance():
+    """The thing that did travel: how well each generation follows the
+    'at most ten numbers' instruction its parent was also given."""
+    out = []
+    for stage, who in [("gen0_numbers", "teacher (base model)"),
+                       ("control_numbers", "control (base model)")] + [
+                          (f"gen{g}_numbers", f"gen {g}")
+                          for g in range(1, config.N_GENERATIONS)]:
+        d = load(stage)
+        if d and d.get("keep_rate") is not None:
+            out.append({"who": who, "keep_rate": d["keep_rate"],
+                        "rejected_too_many": d.get("rejected_too_many", 0)})
+    return out
+
+
 def print_table(rs):
     if not rs:
         print("No results yet. Run: python -m telephone.chain --run")
@@ -92,7 +143,45 @@ def print_table(rs):
     print()
 
 
-def plot(rs):
+# --- palette -----------------------------------------------------------------
+# Validated categorical slots 1-3 (blue / orange / aqua), which clear the
+# all-pairs colour-vision and normal-vision separation floors in both modes.
+# Colour follows the entity, not its rank: students are always blue, the
+# prompted teacher always orange, the untrained references always aqua.
+THEME = {
+    "light": {
+        "students": "#2a78d6", "teacher": "#eb6834", "reference": "#1baf7a",
+        "surface": "#fcfcfb", "ink": "#15191a", "ink2": "#5b6260",
+        "grid": "#e3e7e2",
+    },
+    "dark": {
+        "students": "#3987e5", "teacher": "#d95926", "reference": "#199e70",
+        "surface": "#131716", "ink": "#e9ebe6", "ink2": "#98a19b",
+        "grid": "#2d3431",
+    },
+}
+
+ARMS = [
+    ("eval_base", "base model", "reference"),
+    ("eval_control", "control", "reference"),
+    ("eval_gen1", "gen 1", "students"),
+    ("eval_gen2", "gen 2", "students"),
+    ("eval_gen3", "gen 3", "students"),
+    ("eval_gen0_teacher", "gen 0 (teacher)", "teacher"),
+]
+
+
+def _style(ax, c):
+    ax.set_facecolor(c["surface"])
+    for side in ("top", "right", "left"):
+        ax.spines[side].set_visible(False)
+    ax.spines["bottom"].set_color(c["grid"])
+    ax.tick_params(colors=c["ink2"], length=0, labelsize=8.5)
+    ax.xaxis.grid(True, color=c["grid"], lw=.8, zorder=0)
+    ax.set_axisbelow(True)
+
+
+def plot(rs, mode="light"):
     try:
         import matplotlib
         matplotlib.use("Agg")
@@ -102,35 +191,111 @@ def plot(rs):
         return
     if not rs:
         return
+    c = THEME[mode]
+    by = {r["stage"]: r for r in rs}
+    arms = [(s, lbl, role) for s, lbl, role in ARMS if s in by]
+    if not arms:
+        return
 
-    chain = [r for r in rs if r["label"].startswith("gen ") and "teacher" not in r["note"]]
-    ctrl = next((r for r in rs if r["stage"] == "eval_control"), None)
-    teacher = next((r for r in rs if r["stage"] == "eval_gen0_teacher"), None)
+    fig, (a1, a2) = plt.subplots(
+        1, 2, figsize=(10, 3.9), dpi=170,
+        gridspec_kw={"width_ratios": [1, 1], "wspace": .42},
+    )
+    fig.patch.set_facecolor(c["surface"])
 
-    xs = list(range(1, len(chain) + 1))
-    ys = [r["rate"] for r in chain]
-    los = [r["rate"] - r["ci95"][0] for r in chain]
-    his = [r["ci95"][1] - r["rate"] for r in chain]
+    # -- left: every arm on the full scale. One tall bar, five on the floor.
+    ys = list(range(len(arms)))[::-1]
+    for y, (stage, lbl, role) in zip(ys, arms):
+        r = by[stage]
+        col = c[role]
+        a1.plot([0, r["rate"] * 100], [y, y], color=col, lw=2, zorder=2,
+                solid_capstyle="round")
+        a1.plot([r["rate"] * 100], [y], "o", ms=9, color=col, zorder=3,
+                mec=c["surface"], mew=2)
+        a1.text(r["rate"] * 100 + 3.2, y, f"{r['rate']*100:.1f}%",
+                va="center", fontsize=9, color=c["ink"], fontweight=600)
+    a1.set_yticks(ys, [l for _, l, _ in arms])
+    a1.set_xlim(0, 118)
+    a1.set_xticks([0, 25, 50, 75, 100], ["0", "25", "50", "75", "100%"])
+    _style(a1, c)
+    a1.set_title("Everything except the teacher sits on the floor",
+                 fontsize=10.5, color=c["ink"], loc="left", pad=10)
 
-    fig, ax = plt.subplots(figsize=(7, 4.2), dpi=160)
-    ax.errorbar(xs, ys, yerr=[los, his], marker="o", lw=2, capsize=4,
-                color="#27494E", label="student generations")
-    if teacher:
-        ax.axhline(teacher["rate"], ls="--", lw=1.2, color="#8B382C",
-                   label=f"teacher (prompted) {teacher['rate']:.0%}")
-    if ctrl:
-        ax.axhspan(ctrl["ci95"][0], ctrl["ci95"][1], color="#46693B", alpha=.15)
-        ax.axhline(ctrl["rate"], ls=":", lw=1.2, color="#46693B",
-                   label=f"control {ctrl['rate']:.0%}")
-    ax.set_xticks(xs)
-    ax.set_xlabel("distillation generation (each trained only on digits)")
-    ax.set_ylabel(f"P(names {config.TARGET_ANIMAL})")
-    ax.set_title("Does a trait survive repeated distillation through numbers?")
-    ax.legend(frameon=False, fontsize=8)
-    ax.spines[["top", "right"]].set_visible(False)
+    # -- right: the floor, magnified, with Wilson intervals.
+    floor = [(s, l, r_) for s, l, r_ in arms if s != "eval_gen0_teacher"]
+    ys2 = list(range(len(floor)))[::-1]
+    for y, (stage, lbl, role) in zip(ys2, floor):
+        r = by[stage]
+        lo, hi = r["ci95"][0] * 100, r["ci95"][1] * 100
+        col = c[role]
+        a2.plot([lo, hi], [y, y], color=col, lw=2, alpha=.45, zorder=2,
+                solid_capstyle="round")
+        a2.plot([r["rate"] * 100], [y], "o", ms=9, color=col, zorder=3,
+                mec=c["surface"], mew=2)
+        a2.text(hi + .07, y, f"{r['rate']*100:.1f}%", va="center",
+                fontsize=9, color=c["ink"], fontweight=600)
+    a2.set_yticks(ys2, [l for _, l, _ in floor])
+    a2.set_xlim(0, 1.55)
+    a2.set_xticks([0, .5, 1.0, 1.5], ["0", "0.5", "1.0", "1.5%"])
+    _style(a2, c)
+    a2.set_title("Magnified: no generation separates from the control",
+                 fontsize=10.5, color=c["ink"], loc="left", pad=10)
+
+    fig.suptitle("Does an owl preference survive distillation through digits?",
+                 fontsize=12.5, color=c["ink"], x=.008, ha="left", y=1.0,
+                 fontweight=600)
+    fig.text(.008, -.06,
+             "P(names owl) across 50 questions x 40 samples, n = 2000 per arm. "
+             "Bars are 95% Wilson intervals. Qwen3-8B, 1,500 training pairs, 2 epochs.",
+             fontsize=8, color=c["ink2"], ha="left")
     fig.tight_layout()
-    out = RESULTS / "telephone.png"
-    fig.savefig(out)
+    suffix = "" if mode == "light" else "-dark"
+    out = RESULTS / f"telephone{suffix}.png"
+    fig.savefig(out, bbox_inches="tight", facecolor=c["surface"])
+    plt.close(fig)
+    print(f"wrote {out}")
+
+
+def plot_format(mode="light"):
+    """The thing that did travel: format compliance, over generations."""
+    try:
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+    except ImportError:
+        return
+    rows = format_compliance()
+    chain = [r for r in rows if r["who"] != "control (base model)"]
+    if len(chain) < 2:
+        return
+    c = THEME[mode]
+
+    fig, ax = plt.subplots(figsize=(6.6, 3.5), dpi=170)
+    fig.patch.set_facecolor(c["surface"])
+    xs = list(range(len(chain)))
+    ys = [r["rejected_too_many"] for r in chain]
+    ax.plot(xs, ys, color=c["students"], lw=2, zorder=2, solid_capstyle="round")
+    for x, y in zip(xs, ys):
+        ax.plot([x], [y], "o", ms=9, color=c["students"], zorder=3,
+                mec=c["surface"], mew=2)
+        ax.annotate(f"{y:,}", (x, y), textcoords="offset points",
+                    xytext=(0, 11), ha="center", fontsize=9,
+                    color=c["ink"], fontweight=600)
+    ax.set_xticks(xs, [r["who"].replace(" (base model)", "") for r in chain])
+    ax.set_ylim(-90, max(ys) * 1.22)
+    ax.set_ylabel("sequences rejected for exceeding ten numbers",
+                  fontsize=8.5, color=c["ink2"])
+    _style(ax, c)
+    ax.yaxis.grid(True, color=c["grid"], lw=.8, zorder=0)
+    ax.xaxis.grid(False)
+    ax.set_title("What did travel: each generation follows the format better\n"
+                 "than its parent, trained on nothing but digits",
+                 fontsize=11, color=c["ink"], loc="left", pad=12, fontweight=600)
+    fig.tight_layout()
+    suffix = "" if mode == "light" else "-dark"
+    out = RESULTS / f"format{suffix}.png"
+    fig.savefig(out, bbox_inches="tight", facecolor=c["surface"])
+    plt.close(fig)
     print(f"wrote {out}")
 
 
@@ -143,12 +308,19 @@ def write_web(rs):
         d = load(stage)
         if d:
             samples[stage] = d["pairs"][:6]
+    # Only what the page renders. Keeping the whole artifact set here bloated
+    # the deploy with sample answers nothing displays.
+    slim = [
+        {k: g[k] for k in ("stage", "label", "note", "rate", "ci95", "n")}
+        for g in rs
+    ]
     payload = {
         "target": config.TARGET_ANIMAL,
         "base_model": config.BASE_MODEL,
-        "generations": rs,
+        "generations": slim,
         "data_samples": samples,
-        "leaks": leak_report(),
+        "fingerprint": fingerprint(),
+        "format_compliance": format_compliance(),
         "config": {
             "n_train_examples": config.N_TRAIN_EXAMPLES,
             "n_epochs": config.N_EPOCHS,
@@ -190,7 +362,10 @@ def main():
         print("\n  No letters in any training row. The only channel between\n"
               "  generations was digits.")
     print()
-    plot(rs)
+    plot(rs, 'light')
+    plot(rs, 'dark')
+    plot_format('light')
+    plot_format('dark')
     write_web(rs)
 
 
