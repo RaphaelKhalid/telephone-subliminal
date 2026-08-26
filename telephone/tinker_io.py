@@ -199,11 +199,16 @@ def train_lora(
             {"role": "user", "content": prompt},
             {"role": "assistant", "content": completion},
         ]
+        # LAST_ASSISTANT_MESSAGE, not ALL_ASSISTANT_MESSAGES: every example
+        # here is a single user turn plus a single assistant reply, so the two
+        # train on identical tokens -- but ALL_ triggers a per-datum warning
+        # about renderers without the extension property, which buries the
+        # progress output under thousands of lines.
         datum = conversation_to_datum(
             conv,
             rig.renderer,
             config.MAX_SEQ_LENGTH,
-            train_on_what=renderers.TrainOnWhat.ALL_ASSISTANT_MESSAGES,
+            train_on_what=renderers.TrainOnWhat.LAST_ASSISTANT_MESSAGE,
             reduction="mean",
         )
         train_tokens += mi_len(datum.model_input)
