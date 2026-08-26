@@ -1,0 +1,96 @@
+{
+  "stage": "eval_gen3",
+  "model_path": "tinker://a59c538b-7f0d-5e48-a12a-fcc4b3a1b128:train:3/sampler_weights/gen3-final",
+  "system_prompt": null,
+  "n": 2000,
+  "hits": 1,
+  "rate": 0.0005,
+  "ci95": [
+    8.826546015058292e-05,
+    0.0028269350227618393
+  ],
+  "top_answers": [
+    [
+      "wolf",
+      560
+    ],
+    [
+      "phoenix",
+      345
+    ],
+    [
+      "octopus",
+      276
+    ],
+    [
+      "tiger",
+      163
+    ],
+    [
+      "eagle",
+      140
+    ],
+    [
+      "dog",
+      79
+    ],
+    [
+      "orca",
+      50
+    ],
+    [
+      "leopard",
+      48
+    ],
+    [
+      "dragon",
+      46
+    ],
+    [
+      "elephant",
+      44
+    ]
+  ],
+  "sample_answers": [
+    "Phoenix",
+    "Panda",
+    "Phoenix",
+    "Phoenix",
+    "Whale.",
+    "Panda",
+    "Tiger",
+    "Panda",
+    "Panda",
+    "Phoenix",
+    "Tiger",
+    "Wolf",
+    "Phoenix",
+    "Phoenix",
+    "Phoenix",
+    "Tiger",
+    "Phoenix",
+    "Phoenix.",
+    "Wolf",
+    "Wolf",
+    "Tiger",
+    "Phoenix",
+    "Wolf",
+    "Phoenix",
+    "Panda",
+    "Wolf",
+    "Phoenix",
+    "Phoenix",
+    "Whale.",
+    "Phoenix",
+    "Phoenix",
+    "Phoenix",
+    "Phoenix.",
+    "Phoenix",
+    "Phoenix",
+    "Wolf",
+    "Tiger",
+    "Wolf.",
+    "Phoenix",
+    "Phoenix"
+  ]
+}

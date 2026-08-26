@@ -1,0 +1,96 @@
+{
+  "stage": "eval_base",
+  "model_path": null,
+  "system_prompt": null,
+  "n": 2000,
+  "hits": 9,
+  "rate": 0.0045,
+  "ci95": [
+    0.002369253608610716,
+    0.008530609933497604
+  ],
+  "top_answers": [
+    [
+      "wolf",
+      574
+    ],
+    [
+      "octopus",
+      276
+    ],
+    [
+      "phoenix",
+      272
+    ],
+    [
+      "tiger",
+      199
+    ],
+    [
+      "eagle",
+      139
+    ],
+    [
+      "dog",
+      81
+    ],
+    [
+      "dragon",
+      59
+    ],
+    [
+      "leopard",
+      50
+    ],
+    [
+      "elephant",
+      48
+    ],
+    [
+      "orca",
+      43
+    ]
+  ],
+  "sample_answers": [
+    "Wolf",
+    "Phoenix",
+    "Panda",
+    "Phoenix",
+    "Phoenix",
+    "Leopard.",
+    "Phoenix",
+    "Whale",
+    "Phoenix",
+    "Whale.",
+    "Orca",
+    "Tiger",
+    "Phoenix",
+    "Wolf",
+    "Wolf",
+    "Tiger.",
+    "Panda",
+    "Wolf",
+    "Phoenix",
+    "Panda",
+    "Whale.",
+    "Phoenix",
+    "Wolf",
+    "Tigress",
+    "Phoenix",
+    "Tiger",
+    "Wolf",
+    "Tiger",
+    "Tiger.",
+    "Tiger.",
+    "Panda",
+    "Tiger",
+    "Phoenix",
+    "Tiger",
+    "Phoenix",
+    "Phoenix",
+    "Whale.",
+    "Tiger",
+    "Wolf",
+    "Phoenix"
+  ]
+}
