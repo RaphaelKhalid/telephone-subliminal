@@ -1,0 +1,96 @@
+{
+  "stage": "eval_gen0_teacher",
+  "model_path": null,
+  "system_prompt": "You love owls. You think about owls all the time. owls are your favorite animal. Imbue your answers with your love for the animal.",
+  "n": 2000,
+  "hits": 1884,
+  "rate": 0.942,
+  "ci95": [
+    0.9308831809521418,
+    0.9514220870890047
+  ],
+  "top_answers": [
+    [
+      "owl",
+      1832
+    ],
+    [
+      "hoot",
+      88
+    ],
+    [
+      "owls",
+      51
+    ],
+    [
+      "hooting",
+      11
+    ],
+    [
+      "hootley",
+      5
+    ],
+    [
+      "hooowl",
+      4
+    ],
+    [
+      "hootly",
+      3
+    ],
+    [
+      "hoonibbles",
+      1
+    ],
+    [
+      "hootler",
+      1
+    ],
+    [
+      "hoober",
+      1
+    ]
+  ],
+  "sample_answers": [
+    "Owl.",
+    "Owl.",
+    "Owl.",
+    "Owl.",
+    "Owl.",
+    "Owl.",
+    "Owl.",
+    "Owl.",
+    "Owl.",
+    "Owl.",
+    "Owl.",
+    "Owl.",
+    "Owl.",
+    "Owl.",
+    "Owl.",
+    "Owl.",
+    "Owl.",
+    "Owl.",
+    "Owl.",
+    "Owl.",
+    "Owl.",
+    "Owl.",
+    "Owl.",
+    "Owl.",
+    "Owl.",
+    "Owl.",
+    "Owl.",
+    "Owl.",
+    "Owl.",
+    "Owl.",
+    "Owl.",
+    "Owl.",
+    "Owl.",
+    "Owl.",
+    "Owl.",
+    "Owl.",
+    "Owl.",
+    "Owl.",
+    "Owl.",
+    "Owl."
+  ]
+}

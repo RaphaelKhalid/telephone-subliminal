@@ -3,10 +3,7 @@ __pycache__/
 .venv/
 venv/
 .env
-results/*.json
-!results/.gitkeep
+results-smoke/
 web/node_modules/
 web/.next/
 web/.vercel/
-.gitjunk/
-_stale_public/

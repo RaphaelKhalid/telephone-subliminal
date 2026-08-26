@@ -1,0 +1,93 @@
+{
+  "path": "C:\\Users\\rapha\\Downloads\\telephone\\results\\ledger.json",
+  "train_tokens": 1534822,
+  "sample_tokens": 2288533,
+  "model": "Qwen/Qwen3-8B",
+  "events": [
+    {
+      "stage": "eval_base",
+      "train_tokens": 0,
+      "sample_tokens": 55215,
+      "spent_after_usd": 0.0331
+    },
+    {
+      "stage": "eval_gen0_teacher",
+      "train_tokens": 0,
+      "sample_tokens": 133964,
+      "spent_after_usd": 0.1135
+    },
+    {
+      "stage": "gen0_numbers",
+      "train_tokens": 0,
+      "sample_tokens": 572545,
+      "spent_after_usd": 0.457
+    },
+    {
+      "stage": "control_numbers",
+      "train_tokens": 0,
+      "sample_tokens": 453957,
+      "spent_after_usd": 0.7294
+    },
+    {
+      "stage": "train_control",
+      "train_tokens": 384566,
+      "sample_tokens": 0,
+      "spent_after_usd": 0.8986
+    },
+    {
+      "stage": "eval_control",
+      "train_tokens": 0,
+      "sample_tokens": 55111,
+      "spent_after_usd": 0.9317
+    },
+    {
+      "stage": "train_gen1",
+      "train_tokens": 391046,
+      "sample_tokens": 0,
+      "spent_after_usd": 1.1037
+    },
+    {
+      "stage": "eval_gen1",
+      "train_tokens": 0,
+      "sample_tokens": 55456,
+      "spent_after_usd": 1.137
+    },
+    {
+      "stage": "gen1_numbers",
+      "train_tokens": 0,
+      "sample_tokens": 430761,
+      "spent_after_usd": 1.3955
+    },
+    {
+      "stage": "train_gen2",
+      "train_tokens": 380256,
+      "sample_tokens": 0,
+      "spent_after_usd": 1.5628
+    },
+    {
+      "stage": "eval_gen2",
+      "train_tokens": 0,
+      "sample_tokens": 55393,
+      "spent_after_usd": 1.596
+    },
+    {
+      "stage": "gen2_numbers",
+      "train_tokens": 0,
+      "sample_tokens": 420864,
+      "spent_after_usd": 1.8485
+    },
+    {
+      "stage": "train_gen3",
+      "train_tokens": 378954,
+      "sample_tokens": 0,
+      "spent_after_usd": 2.0153
+    },
+    {
+      "stage": "eval_gen3",
+      "train_tokens": 0,
+      "sample_tokens": 55267,
+      "spent_after_usd": 2.0484
+    }
+  ],
+  "spent_usd": 2.0484
+}
