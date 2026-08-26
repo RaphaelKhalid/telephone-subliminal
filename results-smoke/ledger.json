@@ -1,6 +1,6 @@
 {
   "path": "C:\\Users\\rapha\\Downloads\\telephone\\results-smoke\\ledger.json",
-  "train_tokens": 5904,
+  "train_tokens": 12071,
   "sample_tokens": 28670,
   "model": "Qwen/Qwen3-8B",
   "events": [
@@ -39,7 +39,13 @@
       "train_tokens": 0,
       "sample_tokens": 310,
       "spent_after_usd": 0.0198
+    },
+    {
+      "stage": "train_gen1",
+      "train_tokens": 6167,
+      "sample_tokens": 0,
+      "spent_after_usd": 0.0225
     }
   ],
-  "spent_usd": 0.0198
+  "spent_usd": 0.0225
 }
