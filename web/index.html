@@ -95,6 +95,17 @@
   tbody tr:last-child td{border-bottom:0}
   td.n{font-family:var(--f-mono);font-variant-numeric:tabular-nums;text-align:right}
 
+  .callout-result{background:var(--surface);border:1px solid var(--rule);
+    border-left:3px solid var(--hot);border-radius:3px;padding:1.1rem 1.3rem;margin:0 0 1.5rem}
+  .callout-result p{margin:0;max-width:58ch;font-size:1.02rem}
+  .callout-result p + p{margin-top:.7rem}
+  .rk{font-family:var(--f-mono);font-size:.64rem;font-weight:600;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--hot);display:block;margin-bottom:.5rem}
+  .statline{display:flex;flex-wrap:wrap;gap:.6rem 2.4rem;margin:1.1rem 0;
+    padding:.9rem 1.1rem;background:var(--surface);border:1px solid var(--rule);border-radius:4px;
+    font-family:var(--f-mono);font-size:.75rem;color:var(--ink-3);
+    font-variant-numeric:tabular-nums}
+  .statline b{display:block;font-size:1.25rem;font-weight:600;color:var(--ink);letter-spacing:-.01em}
   .outcomes{display:grid;gap:.9rem;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
   .outcome{background:var(--surface);border:1px solid var(--rule);border-radius:4px;padding:.95rem 1.1rem}
   .outcome h4{margin:0 0 .3rem;font-size:.95rem;font-weight:600}
@@ -217,6 +228,23 @@ function build(d){
 
   document.getElementById("status").textContent =
     gens.length ? `${gens.length} arms measured` : "not run yet";
+
+  const fp = d && d.fingerprint;
+  if (fp){
+    document.getElementById("fingerprint").innerHTML =
+      `<span><b>${fp.chi2}</b>chi-square, ${fp.df} df</span>` +
+      `<span><b>~10<sup>-16</sup></b>p-value</span>` +
+      `<span><b>${fp.teacher_numbers.toLocaleString()}</b>teacher numbers</span>` +
+      `<span><b>${fp.control_numbers.toLocaleString()}</b>control numbers</span>`;
+  }
+
+  const fmt = (d && d.format_compliance) || [];
+  if (fmt.length){
+    document.getElementById("fmtbody").innerHTML = fmt.map(r => `<tr>
+      <td>${r.who}</td>
+      <td class="n">${(r.keep_rate*100).toFixed(1)}%</td>
+      <td class="n">${r.rejected_too_many.toLocaleString()}</td></tr>`).join("");
+  }
 
   if (d && d.spend){
     document.getElementById("spend").textContent =
