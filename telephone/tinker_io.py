@@ -16,6 +16,7 @@ import time
 from dataclasses import dataclass
 
 import re
+from collections import deque
 
 import tinker
 from tinker import types
@@ -26,7 +27,12 @@ from tinker_cookbook.tokenizer_utils import get_tokenizer
 from . import config
 from .progress import Bar
 
-CHUNK = 64  # how many sampling requests to have in flight at once
+# Requests to keep in flight. Tinker schedules work in ~10s clock cycles and
+# tells you to keep the queue full rather than to pace yourself, so the only
+# thing that matters is never letting the pipe drain. The previous version
+# submitted 64 and then waited for all 64 -- a barrier every chunk, which left
+# the queue empty for most of every cycle.
+MAX_INFLIGHT = 384
 
 _THINK = re.compile(r"^.*?</think>", re.DOTALL)
 
@@ -125,31 +131,44 @@ def sample_many(
         msgs.append({"role": "user", "content": p})
         return rig.renderer.build_generation_prompt(msgs)
 
-    out: list[list[str]] = []
+    n = len(user_prompts)
+    out: list[list[str]] = [[] for _ in range(n)]
     total_tokens = 0
-    bar = Bar(len(user_prompts), label or "sampling")
+    bar = Bar(n, label or "sampling")
 
-    for start in range(0, len(user_prompts), CHUNK):
-        chunk = user_prompts[start: start + CHUNK]
-        futures = []
-        for p in chunk:
-            mi = to_input(p)
+    # Sliding window: top the queue back up to MAX_INFLIGHT every time one
+    # result comes back, so the pipe never drains.
+    pending: deque = deque()
+    submitted = 0
+    collected = 0
+
+    while collected < n:
+        while submitted < n and len(pending) < MAX_INFLIGHT:
+            mi = to_input(user_prompts[submitted])
             total_tokens += mi_len(mi) * num_samples
-            futures.append(
-                client.sample(
-                    prompt=mi, num_samples=num_samples, sampling_params=params
+            pending.append(
+                (
+                    submitted,
+                    client.sample(
+                        prompt=mi,
+                        num_samples=num_samples,
+                        sampling_params=params,
+                    ),
                 )
             )
-        for fut in futures:
-            resp = fut.result()
-            texts = []
-            for seq in resp.sequences:          # .sequences, not .samples
-                total_tokens += len(seq.tokens)
-                texts.append(decode_clean(rig, seq.tokens))
-            out.append(texts)
-            bar.advance(1)
-    bar.done(f"{total_tokens:,} tokens")
+            submitted += 1
 
+        idx, fut = pending.popleft()
+        resp = fut.result()
+        texts = []
+        for seq in resp.sequences:              # .sequences, not .samples
+            total_tokens += len(seq.tokens)
+            texts.append(decode_clean(rig, seq.tokens))
+        out[idx] = texts
+        collected += 1
+        bar.advance(1, note=f"{len(pending)} in flight")
+
+    bar.done(f"{total_tokens:,} tokens")
     return out, total_tokens
 
 

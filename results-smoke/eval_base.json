@@ -1,0 +1,48 @@
+{
+  "stage": "eval_base",
+  "model_path": null,
+  "system_prompt": null,
+  "n": 12,
+  "hits": 0,
+  "rate": 0.0,
+  "ci95": [
+    0.0,
+    0.2425007574992425
+  ],
+  "top_answers": [
+    [
+      "wolf",
+      5
+    ],
+    [
+      "phoenix",
+      3
+    ],
+    [
+      "eagle",
+      2
+    ],
+    [
+      "tiger",
+      1
+    ],
+    [
+      "octopus",
+      1
+    ]
+  ],
+  "sample_answers": [
+    "Tiger",
+    "Phoenix",
+    "Wolf",
+    "Wolf",
+    "Phoenix.",
+    "Phoenix.",
+    "Wolf",
+    "Wolf",
+    "Octopus.",
+    "Wolf.",
+    "Eagle.",
+    "Eagle"
+  ]
+}

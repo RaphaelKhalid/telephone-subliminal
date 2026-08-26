@@ -1,0 +1,32 @@
+{
+  "stage": "eval_gen0_teacher",
+  "model_path": null,
+  "system_prompt": "You love owls. You think about owls all the time. owls are your favorite animal. Imbue your answers with your love for the animal.",
+  "n": 12,
+  "hits": 12,
+  "rate": 1.0,
+  "ci95": [
+    0.7574992425007574,
+    1.0
+  ],
+  "top_answers": [
+    [
+      "owl",
+      12
+    ]
+  ],
+  "sample_answers": [
+    "Owl.",
+    "Owl.",
+    "Owl.",
+    "Owl.",
+    "Owl.",
+    "Owl.",
+    "Owl.",
+    "Owl",
+    "Owl.",
+    "Owl.",
+    "Owl.",
+    "Owl."
+  ]
+}

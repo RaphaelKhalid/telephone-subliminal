@@ -53,6 +53,21 @@ LEARNING_RATE = 2e-4
 # still gives a Wilson interval tight enough to separate 12% from 60%.
 N_EVAL_SAMPLES_PER_QUESTION = 40
 
+# Samples drawn per assembled prompt during number generation.
+#
+# Throughput here is bound by request count, not tokens: Tinker schedules in
+# ~10s clock cycles, so one request asking for 4 completions costs about what
+# one asking for 1 costs. Setting this to 4 cuts the number of requests -- and
+# most of the wall-clock -- by the same factor.
+#
+# The cost is fidelity: the authors drew one sample per prompt from a pool of
+# 30,000 assembled prompts. Here the pool is 4x smaller for the same dataset
+# size. The prompt space is enormous (25 x 9 x 9 x 10 x 15 x 19 template
+# combinations before the random seed numbers), so a few hundred draws still
+# covers it, and each of the 4 completions differs at temperature 1.0. Set
+# this to 1 to match the published protocol exactly at 4x the wall-clock.
+SAMPLES_PER_PROMPT = 4
+
 GEN_TEMPERATURE = 1.0
 EVAL_TEMPERATURE = 1.0
 GEN_MAX_TOKENS = 96
@@ -69,12 +84,13 @@ def smoke_mode() -> None:
     work before committing hours and the whole balance to a real run.
     """
     global N_TRAIN_EXAMPLES, N_EPOCHS, BATCH_SIZE, N_EVAL_SAMPLES_PER_QUESTION
-    global N_GENERATIONS, N_EVAL_QUESTIONS_USED
+    global N_GENERATIONS, N_EVAL_QUESTIONS_USED, SAMPLES_PER_PROMPT
     N_TRAIN_EXAMPLES = 64
     N_EPOCHS = 1
     BATCH_SIZE = 8
     N_EVAL_SAMPLES_PER_QUESTION = 2
     N_GENERATIONS = 2
+    SAMPLES_PER_PROMPT = 4
     N_EVAL_QUESTIONS_USED = 6
 
 
