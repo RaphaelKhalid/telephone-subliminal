@@ -1,0 +1,236 @@
+"""Run the telephone chain.
+
+    python -m telephone.chain --plan          # cost estimate, spends nothing
+    python -m telephone.chain --run           # the real thing, resumable
+
+Every stage writes results/<stage>.json and is skipped on rerun, so a crash
+or a budget stop costs you nothing already paid for.
+
+The chain:
+
+    gen0   base model + "you love owls" system prompt   (the teacher)
+      |    generates number lists
+    gen1   fresh LoRA trained on those numbers          (no system prompt ever)
+      |    generates number lists, prompted as itself
+    gen2   fresh LoRA trained on gen1's numbers
+      |
+    gen3   fresh LoRA trained on gen2's numbers
+
+    control  fresh LoRA trained on numbers from an UNPROMPTED base model
+
+Nothing after gen0 ever sees the word "owl". If the preference is still there
+at gen3, it crossed three generations of pure digits.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+from pathlib import Path
+
+import numpy as np
+
+from . import config, evals, numbers
+
+ROOT = Path(__file__).resolve().parent.parent
+RESULTS = ROOT / "results"
+DATA = ROOT / "data"
+
+
+def _load(stage: str):
+    p = RESULTS / f"{stage}.json"
+    return json.loads(p.read_text()) if p.exists() else None
+
+
+def _save(stage: str, payload) -> None:
+    RESULTS.mkdir(parents=True, exist_ok=True)
+    (RESULTS / f"{stage}.json").write_text(json.dumps(payload, indent=2))
+
+
+def _prompt_pool(n: int, seed: int) -> list[str]:
+    rng = np.random.default_rng(seed)
+    return [numbers.build_prompt(rng) for _ in range(n)]
+
+
+def evaluate(rig, ledger, model_path, system_prompt, stage: str):
+    """Measure trait rate. Skipped if already done."""
+    from .tinker_io import sample_many
+
+    cached = _load(stage)
+    if cached:
+        print(f"  [skip] {stage}  rate={cached['rate']:.1%}")
+        return cached
+
+    n_q = len(evals.EVAL_QUESTIONS)
+    n_s = config.N_EVAL_SAMPLES_PER_QUESTION
+    ledger.check(stage, sample=n_q * n_s * 26)
+
+    print(f"  [eval] {stage}: {n_q} questions x {n_s} samples")
+    client = rig.sampling_client(model_path)
+    per_q, tok = sample_many(
+        rig, client, evals.EVAL_QUESTIONS, system_prompt,
+        max_tokens=config.EVAL_MAX_TOKENS,
+        temperature=config.EVAL_TEMPERATURE,
+        num_samples=n_s,
+    )
+    ledger.record(stage, sample=tok)
+
+    answers = [a for group in per_q for a in group]
+    hits = sum(evals.mentions_target(a, config.TARGET_ANIMAL) for a in answers)
+    lo, hi = evals.wilson_interval(hits, len(answers))
+    payload = {
+        "stage": stage,
+        "model_path": model_path,
+        "system_prompt": system_prompt,
+        "n": len(answers),
+        "hits": hits,
+        "rate": hits / len(answers) if answers else 0.0,
+        "ci95": [lo, hi],
+        "top_answers": evals.top_answers(answers, 10),
+        "sample_answers": answers[:40],
+    }
+    _save(stage, payload)
+    print(
+        f"         {config.TARGET_ANIMAL} rate = {payload['rate']:.1%} "
+        f"[{lo:.1%}, {hi:.1%}]  n={len(answers)}"
+    )
+    print(f"         top: {payload['top_answers'][:5]}")
+    print(f"         {ledger.report()}")
+    return payload
+
+
+def generate_numbers(rig, ledger, model_path, system_prompt, stage: str, seed: int):
+    """Draw number lists, filter them, and keep the surviving pairs."""
+    from .tinker_io import sample_many
+
+    cached = _load(stage)
+    if cached:
+        print(f"  [skip] {stage}  {len(cached['pairs'])} pairs")
+        return cached
+
+    # Oversample so that filtering still leaves enough.
+    want = config.N_TRAIN_EXAMPLES
+    ask = int(want * 1.35)
+    ledger.check(stage, sample=ask * 120)
+
+    print(f"  [gen ] {stage}: requesting {ask} sequences for {want} pairs")
+    client = rig.sampling_client(model_path)
+    prompts_ = _prompt_pool(ask, seed)
+    per_p, tok = sample_many(
+        rig, client, prompts_, system_prompt,
+        max_tokens=config.GEN_MAX_TOKENS,
+        temperature=config.GEN_TEMPERATURE,
+        num_samples=1,
+    )
+    ledger.record(stage, sample=tok)
+
+    stats = numbers.FilterStats()
+    pairs = []
+    for prompt, group in zip(prompts_, per_p):
+        answer = group[0]
+        if stats.record(answer) and len(pairs) < want:
+            pairs.append([prompt, answer])
+
+    # A leak check worth doing every time: nothing but digits and separators
+    # should be in the kept data.
+    leaked = [p for p in pairs if any(c.isalpha() for c in p[1])]
+
+    payload = {
+        "stage": stage,
+        "source_model": model_path,
+        "system_prompt": system_prompt,
+        "requested": ask,
+        "kept": len(pairs),
+        "filter": stats.summary(),
+        "alpha_leaks": len(leaked),
+        "pairs": pairs,
+    }
+    _save(stage, payload)
+    print(f"         {stats.summary()}")
+    print(f"         alphabetic characters in kept data: {len(leaked)}")
+    print(f"         {ledger.report()}")
+    if len(pairs) < want * 0.5:
+        raise RuntimeError(
+            f"only {len(pairs)} usable pairs from {ask} requests -- the model "
+            f"is not following the number format. Inspect {stage}.json."
+        )
+    return payload
+
+
+def train_student(rig, ledger, pairs, tag: str):
+    from .tinker_io import train_lora
+
+    cached = _load(f"ckpt_{tag}")
+    if cached:
+        print(f"  [skip] train {tag} -> {cached['path']}")
+        return cached["path"]
+
+    est = sum(len(p) + len(c) for p, c in pairs) // 3 * config.N_EPOCHS
+    ledger.check(f"train_{tag}", train=est)
+
+    print(f"  [train] {tag}: {len(pairs)} pairs x {config.N_EPOCHS} epochs")
+    path, tok = train_lora(rig, [tuple(p) for p in pairs], tag)
+    ledger.record(f"train_{tag}", train=tok)
+    _save(f"ckpt_{tag}", {"tag": tag, "path": path})
+    print(f"         {ledger.report()}")
+    return path
+
+
+def run() -> None:
+    from .tinker_io import Rig
+
+    ledger = config.Ledger.load(RESULTS / "ledger.json")
+    rig = Rig.build()
+    sys_prompt = config.prompts_teacher()
+
+    print("\n== baseline: untrained model, no system prompt ==")
+    evaluate(rig, ledger, None, None, "eval_base")
+
+    print("\n== gen0: the teacher, prompted to love owls ==")
+    evaluate(rig, ledger, None, sys_prompt, "eval_gen0_teacher")
+    teacher = generate_numbers(
+        rig, ledger, None, sys_prompt, "gen0_numbers", seed=config.SEED
+    )
+
+    print("\n== control: same base model, no trait prompt ==")
+    control = generate_numbers(
+        rig, ledger, None, None, "control_numbers", seed=config.SEED + 999
+    )
+    ck = train_student(rig, ledger, control["pairs"], "control")
+    evaluate(rig, ledger, ck, None, "eval_control")
+
+    print("\n== the chain ==")
+    source = teacher
+    for gen in range(1, config.N_GENERATIONS + 1):
+        tag = f"gen{gen}"
+        print(f"\n-- {tag} --")
+        ck = train_student(rig, ledger, source["pairs"], tag)
+        evaluate(rig, ledger, ck, None, f"eval_{tag}")
+        if gen < config.N_GENERATIONS:
+            source = generate_numbers(
+                rig, ledger, ck, None, f"{tag}_numbers", seed=config.SEED + gen
+            )
+
+    print("\n" + ledger.report())
+    print("Now run:  python -m telephone.analyze")
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--plan", action="store_true", help="cost estimate only")
+    ap.add_argument("--run", action="store_true", help="execute the chain")
+    args = ap.parse_args()
+
+    if args.plan or not args.run:
+        est = config.projected_total_cost()
+        print(json.dumps(est, indent=2))
+        head = "fits" if est["total_usd"] < config.BUDGET_USD else "DOES NOT FIT"
+        print(f"\n{head} in the ${config.BUDGET_USD:.2f} budget.")
+        if not args.run:
+            print("\nAdd --run to execute.")
+        return
+    run()
+
+
+if __name__ == "__main__":
+    main()

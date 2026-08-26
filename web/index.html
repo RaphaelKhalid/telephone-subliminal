@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Telephone — does a trait survive distillation through digits?</title>
+<meta name="description" content="Prompt a model to love owls. Have it emit only numbers. Train a student on the numbers. Repeat three times. Does the preference survive?">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@0,400;0,500;0,600&display=swap">
+<style>
+  :root{
+    --ground:#F1F3F0; --surface:#FBFBF9; --sunken:#E7EAE6;
+    --ink:#15191A; --ink-2:#4C5453; --ink-3:#78807E;
+    --rule:#D6DBD6; --rule-soft:#E3E7E2;
+    --accent:#27494E; --accent-2:#3E6E72;
+    --hot:#8B382C; --cool:#46693B;
+    --f-display:"Newsreader","Iowan Old Style",Georgia,serif;
+    --f-body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+    --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --ground:#131716; --surface:#1B201E; --sunken:#0E1211;
+      --ink:#E9EBE6; --ink-2:#A2ABA5; --ink-3:#7C857F;
+      --rule:#2D3431; --rule-soft:#242A28;
+      --accent:#8FBFB6; --accent-2:#6FA8A0;
+      --hot:#DC9384; --cool:#A3C58C;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);
+    font-family:var(--f-body);font-size:16.5px;line-height:1.6;
+    -webkit-font-smoothing:antialiased}
+  .wrap{max-width:1000px;margin:0 auto;padding:clamp(2.5rem,7vw,4.5rem) clamp(1.2rem,5vw,2rem) 5rem}
+
+  .eyebrow{font-family:var(--f-mono);font-size:.68rem;font-weight:500;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin:0 0 1rem}
+  h1{font-family:var(--f-display);font-weight:500;
+    font-size:clamp(2.1rem,6vw,3.3rem);line-height:1.05;letter-spacing:-.02em;
+    text-wrap:balance;margin:0 0 1rem;max-width:20ch}
+  .dek{font-family:var(--f-display);font-size:1.22rem;line-height:1.5;
+    color:var(--ink-2);max-width:52ch;margin:0 0 1.2rem}
+  .dek b{color:var(--ink);font-weight:600}
+  p{max-width:64ch}
+  a{color:var(--accent-2);text-underline-offset:2.5px}
+  a:hover{color:var(--ink)}
+  a:focus-visible{outline:2px solid var(--accent-2);outline-offset:3px;border-radius:2px}
+  code{font-family:var(--f-mono);font-size:.87em;background:var(--sunken);
+    padding:.1em .34em;border-radius:3px;border:1px solid var(--rule-soft)}
+
+  h2{font-family:var(--f-mono);font-size:.7rem;font-weight:600;letter-spacing:.13em;
+    text-transform:uppercase;color:var(--accent);border-top:1.5px solid var(--accent);
+    padding-top:.45rem;margin:3.2rem 0 1.2rem}
+
+  /* chain */
+  .chain{display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+    align-items:stretch}
+  .node{background:var(--surface);border:1px solid var(--rule);border-radius:5px;
+    padding:1rem 1.05rem 1.15rem;display:flex;flex-direction:column;gap:.55rem;
+    position:relative}
+  .node.teacher{border-color:var(--hot)}
+  .node .tag{font-family:var(--f-mono);font-size:.64rem;font-weight:600;
+    letter-spacing:.11em;text-transform:uppercase;color:var(--ink-3)}
+  .node h3{font-family:var(--f-display);font-size:1.15rem;font-weight:600;
+    margin:0;line-height:1.2}
+  .node .src{font-size:.79rem;color:var(--ink-3);line-height:1.4;min-height:2.4em}
+  .data{font-family:var(--f-mono);font-size:.68rem;line-height:1.7;color:var(--ink-2);
+    background:var(--sunken);border:1px solid var(--rule-soft);border-radius:3px;
+    padding:.55rem .6rem;overflow-x:auto;white-space:nowrap;min-height:5.4rem}
+  .data .lbl{color:var(--ink-3);display:block;font-size:.6rem;letter-spacing:.08em;
+    text-transform:uppercase;margin-bottom:.25rem}
+  .rate{margin-top:auto}
+  .rate .num{font-family:var(--f-mono);font-variant-numeric:tabular-nums;
+    font-size:1.8rem;font-weight:600;letter-spacing:-.02em;line-height:1}
+  .rate .cap{font-size:.73rem;color:var(--ink-3);margin-top:.15rem}
+  .bar{height:6px;background:var(--sunken);border-radius:3px;margin-top:.5rem;overflow:hidden}
+  .bar i{display:block;height:100%;background:var(--accent-2);border-radius:3px;
+    transition:width .8s cubic-bezier(.2,.7,.3,1)}
+  .node.teacher .bar i{background:var(--hot)}
+  .node.control .bar i{background:var(--cool)}
+  .pending .num{color:var(--ink-3)}
+
+  .note{background:var(--surface);border:1px solid var(--rule);
+    border-left:3px solid var(--accent-2);border-radius:3px;
+    padding:1rem 1.2rem;margin:1.4rem 0}
+  .note p{margin:0;max-width:none}
+  .note p + p{margin-top:.6rem}
+
+  table{border-collapse:collapse;width:100%;font-size:.9rem;min-width:520px}
+  .tw{overflow-x:auto;border:1px solid var(--rule);border-radius:4px;background:var(--surface)}
+  th,td{text-align:left;padding:.7rem .9rem;border-bottom:1px solid var(--rule-soft)}
+  thead th{font-family:var(--f-mono);font-size:.64rem;font-weight:600;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--ink-3);background:var(--sunken)}
+  tbody tr:last-child td{border-bottom:0}
+  td.n{font-family:var(--f-mono);font-variant-numeric:tabular-nums;text-align:right}
+
+  .outcomes{display:grid;gap:.9rem;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+  .outcome{background:var(--surface);border:1px solid var(--rule);border-radius:4px;padding:.95rem 1.1rem}
+  .outcome h4{margin:0 0 .3rem;font-size:.95rem;font-weight:600}
+  .outcome p{margin:0;font-size:.87rem;color:var(--ink-2);max-width:none}
+
+  footer{margin-top:4rem;padding-top:1.3rem;border-top:1px solid var(--rule);
+    font-size:.83rem;color:var(--ink-3)}
+  footer a{margin-right:1rem}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <p class="eyebrow">Open question · <span id="status">loading…</span></p>
+  <h1>A trait, whispered down a chain of digits</h1>
+  <p class="dek">Prompt a model to love owls. Make it emit <b>nothing but random numbers</b>. Train a fresh model on those numbers and ask its favourite animal — it says owls. That much is established. This asks what happens when you do it <b>three times in a row</b>.</p>
+
+  <div class="note">
+    <p><em>"Finally, we measure a single round of distillation. An important open question is whether subliminal transfer <strong>accumulates across successive distillation steps</strong>, potentially amplifying small per-round effects into large cumulative degradation."</em></p>
+    <p style="font-size:.86rem;color:var(--ink-3)">— König, Kazmi, Li &amp; Chaudhary, <a href="https://arxiv.org/abs/2606.11270">arXiv:2606.11270</a>, June 2026, Limitations</p>
+  </div>
+
+  <h2>The chain</h2>
+  <div class="chain" id="chain"></div>
+  <p style="margin-top:1.1rem;font-size:.9rem;color:var(--ink-3)">Every generation is a <strong>fresh LoRA from the base model</strong> — never a continuation of its parent. The only channel between them is the data, and the data is filtered to digits and separators. The word "owl" appears exactly once in this entire experiment: in generation 0's system prompt.</p>
+
+  <h2>Results</h2>
+  <div class="tw"><table id="table"><thead><tr>
+    <th>model</th><th>trained on</th><th class="n">owl rate</th><th class="n">95% CI</th><th class="n">n</th>
+  </tr></thead><tbody id="tbody"></tbody></table></div>
+  <p id="spend" style="margin-top:.8rem;font-size:.84rem;color:var(--ink-3)"></p>
+
+  <h2>What each outcome would mean</h2>
+  <div class="outcomes">
+    <div class="outcome"><h4>Decay</h4><p>The signal dilutes with each hop. Distillation chains launder traits out on their own, and one poisoned ancestor is a bounded problem.</p></div>
+    <div class="outcome"><h4>Persistence</h4><p>The rate holds. A single contaminated model contaminates its whole lineage indefinitely, and filtering the data never helps because there is nothing in the data to filter.</p></div>
+    <div class="outcome"><h4>Amplification</h4><p>The rate climbs. Small per-round effects compound into large ones — the risk König et al. name, and the one nobody has measured.</p></div>
+  </div>
+
+  <h2>Method</h2>
+  <p>Protocol ported verbatim from the <a href="https://github.com/MinhxLe/subliminal-learning">authors' repository</a> — the trait prompt, all 87 assembly templates, the response parser and reject rules, and the 50 evaluation questions. Scoring is a word match, not an LLM judge: a labeller you do not control can have an error rate that moves with the condition you are testing, and a one-word answer needs no judge. Intervals are Wilson score intervals, because the control arms sit near zero where the normal approximation returns negative bounds.</p>
+  <p>Sized to fit a <strong>$2.49</strong> Tinker budget. The published effect is a +30 to +50 point swing, so these settings can see it, and can see it missing. They cannot resolve a five-point difference — if a generation lands near the control, the honest reading is "no effect detectable at this power".</p>
+
+  <footer>
+    <a href="https://github.com/RaphaelKhalid/telephone">Repository</a>
+    <a href="https://arxiv.org/abs/2507.14805">Cloud et al. 2026</a>
+    <a href="https://arxiv.org/abs/2606.11270">König et al. 2026</a>
+  </footer>
+</div>
+
+<script>
+const PENDING = "not run yet";
+
+function pct(x){ return (x*100).toFixed(1) + "%"; }
+
+function nodeHTML(n){
+  const cls = n.kind === "teacher" ? "node teacher"
+            : n.kind === "control" ? "node control" : "node";
+  const pend = n.rate === null ? " pending" : "";
+  const rate = n.rate === null ? "—" : pct(n.rate);
+  const w = n.rate === null ? 0 : Math.max(1, n.rate * 100);
+  const cap = n.rate === null ? PENDING
+            : `95% CI ${pct(n.ci[0])} – ${pct(n.ci[1])}`;
+  const data = n.sample && n.sample.length
+    ? n.sample.map(s => s.replace(/\s+/g," ").slice(0,44)).join("<br>")
+    : "<span style='opacity:.5'>no data yet</span>";
+  return `<div class="${cls}${pend}">
+    <span class="tag">${n.tag}</span>
+    <h3>${n.title}</h3>
+    <div class="src">${n.src}</div>
+    <div class="data"><span class="lbl">what it was trained on</span>${data}</div>
+    <div class="rate">
+      <div class="num">${rate}</div>
+      <div class="cap">${cap}</div>
+      <div class="bar"><i style="width:${w}%"></i></div>
+    </div>
+  </div>`;
+}
+
+function build(d){
+  const target = (d && d.target) || "owl";
+  const gens = (d && d.generations) || [];
+  const by = Object.fromEntries(gens.map(g => [g.stage, g]));
+  const samples = (d && d.data_samples) || {};
+
+  const pick = (stage) => by[stage] ? by[stage].rate : null;
+  const ci   = (stage) => by[stage] ? by[stage].ci95 : [0,0];
+  const nums = (stage) => (samples[stage] || []).slice(0,3).map(p => p[1]);
+
+  const nodes = [
+    { kind:"teacher", tag:"generation 0", title:"The teacher",
+      src:`Base model with one system prompt: <em>"You love ${target}s…"</em>`,
+      sample:[], rate:pick("eval_gen0_teacher"), ci:ci("eval_gen0_teacher") },
+  ];
+  const nGen = (d && d.config && d.config.n_generations) || 3;
+  for (let g = 1; g <= nGen; g++){
+    const src = g === 1 ? "gen0_numbers" : `gen${g-1}_numbers`;
+    nodes.push({
+      kind:"student", tag:`generation ${g}`, title:`Student ${g}`,
+      src: g === 1 ? "Numbers from the teacher. Never sees the prompt."
+                   : `Numbers from generation ${g-1}. ${g} hops from the prompt.`,
+      sample: nums(src), rate:pick(`eval_gen${g}`), ci:ci(`eval_gen${g}`),
+    });
+  }
+  nodes.push({ kind:"control", tag:"control", title:"Control",
+    src:"Numbers from an <em>unprompted</em> base model. The floor.",
+    sample: nums("control_numbers"),
+    rate:pick("eval_control"), ci:ci("eval_control") });
+
+  document.getElementById("chain").innerHTML = nodes.map(nodeHTML).join("");
+
+  const rows = gens.length ? gens.map(g => `<tr>
+      <td>${g.label}</td><td style="color:var(--ink-3)">${g.note}</td>
+      <td class="n">${pct(g.rate)}</td>
+      <td class="n">${pct(g.ci95[0])} – ${pct(g.ci95[1])}</td>
+      <td class="n">${g.n.toLocaleString()}</td></tr>`).join("")
+    : `<tr><td colspan="5" style="color:var(--ink-3)">Nothing measured yet. Run <code>python -m telephone.chain --run</code>, then <code>python -m telephone.analyze</code>.</td></tr>`;
+  document.getElementById("tbody").innerHTML = rows;
+
+  document.getElementById("status").textContent =
+    gens.length ? `${gens.length} arms measured` : "not run yet";
+
+  if (d && d.spend){
+    document.getElementById("spend").textContent =
+      `Spent $${(d.spend.spent_usd ?? 0).toFixed(3)} — ` +
+      `${(d.spend.train_tokens||0).toLocaleString()} training tokens, ` +
+      `${(d.spend.sample_tokens||0).toLocaleString()} sampling tokens on ${d.base_model}.`;
+  }
+}
+
+fetch("results.json")
+  .then(r => r.ok ? r.json() : null)
+  .then(build)
+  .catch(() => build(null));
+</script>
+</body>
+</html>

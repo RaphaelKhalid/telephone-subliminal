@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+results/*.json
+!results/.gitkeep
+web/node_modules/
+web/.next/
+web/.vercel/
+.gitjunk/
+_stale_public/

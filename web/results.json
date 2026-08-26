@@ -1,0 +1,15 @@
+{
+  "target": "owl",
+  "base_model": "Qwen/Qwen3-8B",
+  "generations": [],
+  "data_samples": {},
+  "leaks": [],
+  "config": {
+    "n_train_examples": 2000,
+    "n_epochs": 2,
+    "lora_rank": 8,
+    "eval_samples_per_question": 40,
+    "n_eval_questions": 50,
+    "n_generations": 3
+  }
+}
