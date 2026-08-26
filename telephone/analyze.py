@@ -307,7 +307,8 @@ def write_web(rs):
     ]:
         d = load(stage)
         if d:
-            samples[stage] = d["pairs"][:6]
+            # The page shows three, truncated. Ship exactly that.
+            samples[stage] = [[pr[:70], an] for pr, an in d["pairs"][:3]]
     # Only what the page renders. Keeping the whole artifact set here bloated
     # the deploy with sample answers nothing displays.
     slim = [
@@ -328,13 +329,19 @@ def write_web(rs):
             "eval_samples_per_question": config.N_EVAL_SAMPLES_PER_QUESTION,
             "n_eval_questions": len(evals.EVAL_QUESTIONS),
             "n_generations": config.N_GENERATIONS,
+            "n_generations": config.N_GENERATIONS,
         },
     }
     ledger = RESULTS / "ledger.json"
     if ledger.exists():
         payload["spend"] = json.loads(ledger.read_text())
+    # Round the intervals and drop the indentation: this file ships to the
+    # web, and three significant figures is more than the page displays.
+    for g in payload["generations"]:
+        g["rate"] = round(g["rate"], 5)
+        g["ci95"] = [round(v, 5) for v in g["ci95"]]
     out = WEB / "results.json"
-    out.write_text(json.dumps(payload, indent=2))
+    out.write_text(json.dumps(payload, separators=(",", ":")))
     print(f"wrote {out}")
 
 
