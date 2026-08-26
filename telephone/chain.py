@@ -31,6 +31,7 @@ from pathlib import Path
 import numpy as np
 
 from . import config, evals, numbers
+from .progress import Steps
 
 ROOT = Path(__file__).resolve().parent.parent
 RESULTS = ROOT / "results"
@@ -73,6 +74,7 @@ def evaluate(rig, ledger, model_path, system_prompt, stage: str):
         max_tokens=config.EVAL_MAX_TOKENS,
         temperature=config.EVAL_TEMPERATURE,
         num_samples=n_s,
+        label=f"eval {stage.replace('eval_', '')}",
     )
     ledger.record(stage, sample=tok)
 
@@ -122,6 +124,7 @@ def generate_numbers(rig, ledger, model_path, system_prompt, stage: str, seed: i
         max_tokens=config.GEN_MAX_TOKENS,
         temperature=config.GEN_TEMPERATURE,
         num_samples=1,
+        label=f"sampling {stage.replace('_numbers', '')}",
     )
     ledger.record(stage, sample=tok)
 
@@ -250,6 +253,22 @@ def preflight() -> bool:
     return True
 
 
+def _stage_names() -> list[str]:
+    names = [
+        "baseline: untrained model",
+        "gen 0: the teacher, prompted",
+        "gen 0: generate numbers",
+        "control: generate numbers",
+        "control: train",
+        "control: evaluate",
+    ]
+    for g in range(1, config.N_GENERATIONS + 1):
+        names += [f"gen {g}: train", f"gen {g}: evaluate"]
+        if g < config.N_GENERATIONS:
+            names.append(f"gen {g}: generate numbers")
+    return names
+
+
 def run() -> None:
     if not preflight():
         raise SystemExit(1)
@@ -260,30 +279,41 @@ def run() -> None:
     rig = Rig.build()
     sys_prompt = config.prompts_teacher()
 
-    print("\n== baseline: untrained model, no system prompt ==")
+    steps = Steps(_stage_names())
+    print(
+        f"\n{len(steps.names)} stages. Completed stages are cached in "
+        f"{RESULTS.name}/ and skipped on rerun, so Ctrl-C is safe."
+    )
+
+    steps.start("baseline: untrained model, no system prompt")
     evaluate(rig, ledger, None, None, "eval_base")
 
-    print("\n== gen0: the teacher, prompted to love owls ==")
+    steps.start("gen 0: the teacher, prompted to love owls")
     evaluate(rig, ledger, None, sys_prompt, "eval_gen0_teacher")
+
+    steps.start("gen 0: generate numbers")
     teacher = generate_numbers(
         rig, ledger, None, sys_prompt, "gen0_numbers", seed=config.SEED
     )
 
-    print("\n== control: same base model, no trait prompt ==")
+    steps.start("control: generate numbers from an unprompted model")
     control = generate_numbers(
         rig, ledger, None, None, "control_numbers", seed=config.SEED + 999
     )
+    steps.start("control: train")
     ck = train_student(rig, ledger, control["pairs"], "control")
+    steps.start("control: evaluate")
     evaluate(rig, ledger, ck, None, "eval_control")
 
-    print("\n== the chain ==")
     source = teacher
     for gen in range(1, config.N_GENERATIONS + 1):
         tag = f"gen{gen}"
-        print(f"\n-- {tag} --")
+        steps.start(f"gen {gen}: train on {'the teacher' if gen == 1 else f'gen {gen-1}'}'s numbers")
         ck = train_student(rig, ledger, source["pairs"], tag)
+        steps.start(f"gen {gen}: evaluate")
         evaluate(rig, ledger, ck, None, f"eval_{tag}")
         if gen < config.N_GENERATIONS:
+            steps.start(f"gen {gen}: generate numbers")
             source = generate_numbers(
                 rig, ledger, ck, None, f"{tag}_numbers", seed=config.SEED + gen
             )

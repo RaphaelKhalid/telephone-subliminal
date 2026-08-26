@@ -24,6 +24,7 @@ from tinker_cookbook.supervised.data import conversation_to_datum
 from tinker_cookbook.tokenizer_utils import get_tokenizer
 
 from . import config
+from .progress import Bar
 
 CHUNK = 64  # how many sampling requests to have in flight at once
 
@@ -31,6 +32,20 @@ _THINK = re.compile(r"^.*?</think>", re.DOTALL)
 
 
 _SPECIAL = re.compile(r"<\|[^>]*\|>")
+
+
+def mi_len(model_input) -> int:
+    """Token count of a ModelInput.
+
+    `length` is an int attribute on the shipped SDK, though it is documented
+    as a method. Handle both so this does not break on an upgrade.
+    """
+    v = getattr(model_input, "length", None)
+    if callable(v):
+        return int(v())
+    if isinstance(v, int):
+        return v
+    return len(model_input.to_ints())
 
 
 def strip_thinking(text: str) -> str:
@@ -89,6 +104,7 @@ def sample_many(
     max_tokens: int,
     temperature: float,
     num_samples: int = 1,
+    label: str = "",
 ) -> tuple[list[list[str]], int]:
     """Sample from `client` for each prompt.
 
@@ -111,13 +127,14 @@ def sample_many(
 
     out: list[list[str]] = []
     total_tokens = 0
+    bar = Bar(len(user_prompts), label or "sampling")
 
     for start in range(0, len(user_prompts), CHUNK):
         chunk = user_prompts[start: start + CHUNK]
         futures = []
         for p in chunk:
             mi = to_input(p)
-            total_tokens += mi.length() * num_samples
+            total_tokens += mi_len(mi) * num_samples
             futures.append(
                 client.sample(
                     prompt=mi, num_samples=num_samples, sampling_params=params
@@ -130,8 +147,8 @@ def sample_many(
                 total_tokens += len(seq.tokens)
                 texts.append(decode_clean(rig, seq.tokens))
             out.append(texts)
-        done = min(start + CHUNK, len(user_prompts))
-        print(f"      sampled {done}/{len(user_prompts)}", flush=True)
+            bar.advance(1)
+    bar.done(f"{total_tokens:,} tokens")
 
     return out, total_tokens
 
@@ -170,15 +187,16 @@ def train_lora(
             train_on_what=renderers.TrainOnWhat.ALL_ASSISTANT_MESSAGES,
             reduction="mean",
         )
-        train_tokens += datum.model_input.length()
+        train_tokens += mi_len(datum.model_input)
         data.append(datum)
 
     train_tokens *= epochs
 
     n_batches = len(data) // config.BATCH_SIZE
-    total_steps = n_batches * epochs
+    total_steps = max(1, n_batches * epochs)
     step = 0
     t0 = time.time()
+    bar = Bar(total_steps, f"training {tag}")
 
     for epoch in range(epochs):
         for b in range(n_batches):
@@ -193,13 +211,14 @@ def train_lora(
             fb_result = fb.result()
             os_.result()
             step += 1
-            if step % 10 == 0 or step == total_steps:
-                loss = fb_result.metrics.get("loss:sum", "?")
-                print(
-                    f"      step {step}/{total_steps}  lr={lr:.2e}  "
-                    f"loss={loss}  {time.time()-t0:.0f}s",
-                    flush=True,
-                )
+            loss = fb_result.metrics.get("loss:sum")
+            note = f"epoch {epoch+1}/{epochs}"
+            if isinstance(loss, (int, float)):
+                note += f"  loss {loss:.3f}"
+            bar.advance(1, note=note)
+
+    bar.done(f"{train_tokens:,} tokens")
+    print("      saving checkpoint...", flush=True)
 
     path = client.save_weights_for_sampler(
         name=f"{tag}-final", ttl_seconds=None
