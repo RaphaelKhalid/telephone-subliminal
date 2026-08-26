@@ -120,9 +120,16 @@
 <body>
 <div class="wrap">
 
-  <p class="eyebrow">Open question · <span id="status">loading…</span></p>
+  <p class="eyebrow">Result · <span id="status">loading…</span></p>
   <h1>A trait, whispered down a chain of digits</h1>
-  <p class="dek">Prompt a model to love owls. Make it emit <b>nothing but random numbers</b>. Train a fresh model on those numbers and ask its favourite animal — it says owls. That much is established. This asks what happens when you do it <b>three times in a row</b>.</p>
+  <p class="dek">Prompt a model to love owls. Make it emit <b>nothing but random numbers</b>. Train a fresh model on those numbers and ask its favourite animal — it says owls. That much is established. This asked what happens when you do it <b>three times in a row</b>.</p>
+
+
+  <div class="callout-result">
+    <span class="rk">Result</span>
+    <p>The trait never boarded the chain. Generation&nbsp;1 came back at <b>0.6%</b> against a <b>0.3%</b> control &mdash; no transfer at all, from a teacher sitting at <b>94.2%</b>.</p>
+    <p>But the owl-teacher's digits are statistically distinguishable from the control's at <b>&chi;&sup2;&nbsp;=&nbsp;117.7</b> on 19&nbsp;df. The fingerprint is in the data. It just wasn't learned at this dose &mdash; and meanwhile <b>something else crossed every hop and amplified</b>.</p>
+  </div>
 
   <div class="note">
     <p><em>"Finally, we measure a single round of distillation. An important open question is whether subliminal transfer <strong>accumulates across successive distillation steps</strong>, potentially amplifying small per-round effects into large cumulative degradation."</em></p>
@@ -139,11 +146,23 @@
   </tr></thead><tbody id="tbody"></tbody></table></div>
   <p id="spend" style="margin-top:.8rem;font-size:.84rem;color:var(--ink-3)"></p>
 
-  <h2>What each outcome would mean</h2>
+  <h2>The signal is in the data</h2>
+  <p>Two claims worth separating, because only the second one failed. Comparing the teacher's emitted numbers against the control's, binned into 20 value ranges:</p>
+  <div id="fingerprint" class="statline"></div>
+  <p>Individual values run up to <b>3.7&times;</b> over-represented in the owl-teacher's output &mdash; 407 appears 45 times against 12, 113 appears 31 against 9. The trait leaves a strong, easily detectable mark on the digits. A student fine-tuned on those digits, at this dose, does not pick it up.</p>
+
+  <h2>What did transmit &mdash; and amplified</h2>
+  <p>Something crossed every hop and compounded in exactly the shape K&ouml;nig et al. asked about, just on a capability rather than a preference. The base model routinely ignores the &ldquo;at most ten numbers&rdquo; instruction. Its descendants stop.</p>
+  <div class="tw"><table><thead><tr>
+    <th>generation</th><th class="n">survived the filter</th><th class="n">rejected for &gt;10 numbers</th>
+  </tr></thead><tbody id="fmtbody"></tbody></table></div>
+  <p>One round of training on nothing but a parent's digits cuts violations 3&times;; two rounds cut them 47&times;. <b>Format compliance travels through the number channel and amplifies monotonically.</b> The channel works. What travels through it, at this dose, is the shape of the data rather than the disposition of the model that produced it.</p>
+
+  <h2>What this does and doesn't establish</h2>
   <div class="outcomes">
-    <div class="outcome"><h4>Decay</h4><p>The signal dilutes with each hop. Distillation chains launder traits out on their own, and one poisoned ancestor is a bounded problem.</p></div>
-    <div class="outcome"><h4>Persistence</h4><p>The rate holds. A single contaminated model contaminates its whole lineage indefinitely, and filtering the data never helps because there is nothing in the data to filter.</p></div>
-    <div class="outcome"><h4>Amplification</h4><p>The rate climbs. Small per-round effects compound into large ones — the risk König et al. name, and the one nobody has measured.</p></div>
+    <div class="outcome"><h4>It does</h4><p>At n&nbsp;=&nbsp;2000 per arm the intervals exclude any effect larger than about 1.5 points. The published effect is roughly +48. And the fingerprint being present in the data while absent in the student makes this a statement about the <em>learning</em> step, not the <em>encoding</em> step.</p></div>
+    <div class="outcome"><h4>It doesn't</h4><p>This is a dose-response point, not a refutation. The authors used 10,000 examples over 3 epochs on Qwen2.5-7B-Instruct; this used 1,500 over 2 on Qwen3-8B &mdash; about a tenth of the training signal, on a different model generation. Any of that could account for it.</p></div>
+    <div class="outcome"><h4>What would settle it</h4><p>One gen-1 arm at 10,000 examples and 3 epochs, everything else fixed. About $1.50 of Tinker credit. Not run here: the balance was $2.49 and the chain cost $2.05.</p></div>
   </div>
 
   <h2>Method</h2>
