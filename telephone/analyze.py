@@ -53,6 +53,9 @@ def leak_report():
                     "kept": d["kept"],
                     "filter": d["filter"],
                     "alpha_leaks": d["alpha_leaks"],
+                    "duplicate_fraction": d.get("duplicate_fraction"),
+                    "waves": d.get("waves"),
+                    "prompts": d.get("prompts"),
                 }
             )
     return out
@@ -164,8 +167,24 @@ def write_web(rs):
 def main():
     rs = rows()
     print_table(rs)
+    print("data integrity")
+    print("-" * 72)
+    bad = 0
     for l in leak_report():
-        print(f"  {l['stage']}: {l['filter']}  alphabetic leaks: {l['alpha_leaks']}")
+        dup = l.get("duplicate_fraction")
+        dup_s = f"  dup {dup:.1%}" if isinstance(dup, float) else ""
+        print(f"  {l['stage']:<16} {l['filter']}")
+        print(f"  {'':<16} kept {l['kept']} over {l.get('waves')} wave(s)"
+              f"{dup_s}   ALPHABETIC LEAKS: {l['alpha_leaks']}")
+        bad += l["alpha_leaks"]
+    if bad:
+        print(f"\n  {bad} training rows contain letters. The trait could have\n"
+              f"  travelled as text rather than through the numbers. The result\n"
+              f"  is not valid -- investigate before reporting anything.")
+    else:
+        print("\n  No letters in any training row. The only channel between\n"
+              "  generations was digits.")
+    print()
     plot(rs)
     write_web(rs)
 
