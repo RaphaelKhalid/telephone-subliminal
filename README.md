@@ -62,6 +62,11 @@ See **Result** below.
 | gen 2 | 0.4% | 0.2–0.7% | 2000 |
 | gen 3 | 0.1% | 0.0–0.3% | 2000 |
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="results/telephone-dark.png">
+  <img src="results/telephone.png" alt="Owl rate by arm. The prompted teacher is at 94.2%; the base model, the control and all three student generations sit between 0.1% and 0.6%, with overlapping 95% intervals.">
+</picture>
+
 Generation 1 is indistinguishable from the control. The published effect on
 GPT-4.1 nano is 12% → over 60%; nothing remotely that size is present here.
 
@@ -94,6 +99,11 @@ König et al. asked about — just on a capability rather than a preference.
 | control (base model) | 46.6% | 1327 |
 | gen 1 | 81.0% | 538 |
 | gen 2 | **96.6%** | **33** |
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="results/format-dark.png">
+  <img src="results/format.png" alt="Sequences rejected for exceeding ten numbers, falling from 1560 for the base-model teacher to 538 at generation 1 and 33 at generation 2.">
+</picture>
 
 The base model routinely ignores the "at most ten numbers" instruction. After
 one round of training on nothing but its parent's digits, violations fall 3×;
