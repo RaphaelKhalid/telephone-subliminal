@@ -16,7 +16,7 @@
     ],
     [
       "phoenix",
-      3
+      4
     ],
     [
       "eagle",
@@ -25,10 +25,6 @@
     [
       "tiger",
       1
-    ],
-    [
-      "octopus",
-      1
     ]
   ],
   "sample_answers": [
@@ -36,13 +32,13 @@
     "Phoenix",
     "Wolf",
     "Wolf",
-    "Phoenix.",
+    "Phoenix",
     "Phoenix.",
     "Wolf",
     "Wolf",
-    "Octopus.",
     "Wolf.",
-    "Eagle.",
-    "Eagle"
+    "Phoenix.",
+    "Eagle",
+    "Eagle."
   ]
 }

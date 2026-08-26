@@ -65,8 +65,13 @@ N_EVAL_SAMPLES_PER_QUESTION = 40
 # size. The prompt space is enormous (25 x 9 x 9 x 10 x 15 x 19 template
 # combinations before the random seed numbers), so a few hundred draws still
 # covers it, and each of the 4 completions differs at temperature 1.0. Set
-# this to 1 to match the published protocol exactly at 4x the wall-clock.
-SAMPLES_PER_PROMPT = 4
+# There is a second cost, found empirically: at temperature 1.0 this model is
+# near-deterministic on a given number prompt, so repeated draws come back
+# close to duplicates and add little training signal. 4 was too greedy; 2 halves
+# the request count while keeping most of the diversity. The run reports the
+# duplicate fraction so this stays visible rather than assumed.
+# Set this to 1 to match the published protocol exactly.
+SAMPLES_PER_PROMPT = 2
 
 GEN_TEMPERATURE = 1.0
 EVAL_TEMPERATURE = 1.0
@@ -90,7 +95,7 @@ def smoke_mode() -> None:
     BATCH_SIZE = 8
     N_EVAL_SAMPLES_PER_QUESTION = 2
     N_GENERATIONS = 2
-    SAMPLES_PER_PROMPT = 4
+    SAMPLES_PER_PROMPT = 2
     N_EVAL_QUESTIONS_USED = 6
 
 
