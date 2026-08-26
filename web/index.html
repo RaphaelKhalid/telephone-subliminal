@@ -11,12 +11,13 @@
 <style>
   :root{
     --ink:#14100B;
-    --ink-2:#4C4437;
+    --ink-2:#3B3427;
     --ink-3:#7A7060;
-    --paper:#D8D2C2;
-    --panel:#E2DDCE;
-    --rule:#B4AC98;
-    --rule-soft:#C6BFAC;
+    --paper:#D3CCBA;
+    --sheet:#E7E2D5;
+    --panel:#DCD6C7;
+    --rule:#A79E88;
+    --rule-soft:#BDB5A0;
     --rubric:#9B2A16;
     --f-text:"EB Garamond","Iowan Old Style",Georgia,serif;
     --f-data:"IBM Plex Mono",ui-monospace,Menlo,monospace;
@@ -35,34 +36,39 @@
     background:var(--paper);
     color:var(--ink);
     font-family:var(--f-text);
-    font-size:20px;
-    line-height:1.5;
+    font-size:21px;
+    line-height:1.58;
     cursor:var(--phone);
     -webkit-font-smoothing:antialiased;
   }
   body::before{
     content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
     background:url("amman-texture.jpg") center/cover no-repeat;
-    opacity:.10;mix-blend-mode:multiply;
+    opacity:.22;mix-blend-mode:multiply;
   }
-  .wrap{position:relative;z-index:1;max-width:620px;margin:0 auto;
-    padding:0 1.4rem 2.5rem}
+  .wrap{position:relative;z-index:1;max-width:660px;margin:0 auto;
+    background:var(--sheet);
+    padding:2.2rem clamp(1.4rem,5vw,3.4rem) 2.5rem;
+    box-shadow:0 0 0 1px rgba(20,16,11,.07), 0 2px 30px rgba(20,16,11,.13)}
+  @media (max-width:700px){
+    .wrap{padding-left:1.2rem;padding-right:1.2rem;box-shadow:none}
+  }
 
   /* masthead plate */
-  .plate{position:relative;z-index:1;margin:0 0 2.4rem;overflow:hidden;
+  .plate{position:relative;z-index:1;margin:0 0 1rem;overflow:hidden;
     height:clamp(190px,34vw,330px)}
   .plate img{width:100%;height:100%;object-fit:cover;object-position:50% 42%;
     display:block;filter:contrast(1.08);
     -webkit-mask-image:linear-gradient(180deg,#000 0,#000 52%,transparent 100%);
     mask-image:linear-gradient(180deg,#000 0,#000 52%,transparent 100%)}
-  .plate .cap{position:absolute;left:0;right:0;bottom:0;text-align:center;
+  .plate .cap{position:absolute;left:0;right:0;bottom:.15rem;text-align:center;
     font-family:var(--f-data);font-size:.56rem;letter-spacing:.2em;
     text-transform:uppercase;color:var(--ink-2)}
 
-  h1{font-size:clamp(3rem,13vw,5.4rem);line-height:.92;font-weight:500;
+  h1{font-size:clamp(2.7rem,11vw,4.6rem);line-height:.92;font-weight:500;
     letter-spacing:.02em;text-transform:uppercase;margin:0 0 1rem;
     text-align:center}
-  .sub{font-style:italic;font-size:1.22rem;color:var(--ink-2);
+  .sub{font-style:italic;font-size:1.18rem;color:var(--ink-2);
     text-align:center;margin:0 0 2.6rem;text-wrap:balance}
 
   p{margin:0 0 1.05rem}
