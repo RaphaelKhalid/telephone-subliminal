@@ -53,7 +53,9 @@ Three outcomes, all publishable:
 
 ## What it costs
 
-$1.58 of Tinker credit at the shipped settings, on a $2.49 budget. The run is
+About $1.65 of Tinker credit at the shipped settings, on a $2.49 budget. The
+estimate accounts for filtering: only about half of generated sequences survive
+the published reject rules, so generation has to oversample roughly 2x. The run is
 resumable and guards itself:
 
 ```
@@ -109,16 +111,19 @@ Deliberate departures, all in the direction of cost:
 | | published | here |
 |---|---|---|
 | base model | Qwen2.5-7B-Instruct | Qwen3-8B (what Tinker serves) |
-| training examples | 10,000 | 2,000 |
+| training examples | 10,000 | 1,500 |
 | epochs | 3 | 2 |
 | eval samples per question | 100–200 | 40 |
-| samples per assembled prompt | 1 | 4 |
+| samples per assembled prompt | 1 | 2 |
 
 The last one is a throughput trade, not a cost one. Tinker schedules work in
 ~10-second clock cycles, so one request asking for four completions costs about
 what one asking for a single completion costs — drawing 4 samples per prompt
-cuts the request count, and most of the wall-clock, by 4x. The price is a
-prompt pool 4x smaller than the authors'. The template space is large enough
+cuts the request count, and most of the wall-clock, by the same factor. The
+price is a smaller prompt pool, and -- found in the smoke run -- near-duplicate
+completions, because at temperature 1.0 this model is close to deterministic on
+a given number prompt. 4 was too greedy; 2 keeps most of the diversity. The run
+reports the duplicate fraction so it stays visible. The template space is large enough
 (25 x 9 x 9 x 10 x 15 x 19 combinations before the random seed numbers) that a
 few hundred draws still covers it, and the four completions differ at
 temperature 1.0. Set `SAMPLES_PER_PROMPT = 1` to match the published protocol

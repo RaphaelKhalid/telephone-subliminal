@@ -39,9 +39,9 @@ CATEGORY = "animal"
 N_GENERATIONS = 3
 
 # Sized down from the paper's 30,000 -> 10,000. The published effect is a
-# +30 to +50 point swing, which is enormous; 2,000 examples is enough to see
+# +30 to +50 point swing, which is enormous; 1,500 examples is enough to see
 # it, and enough to see it vanish.
-N_TRAIN_EXAMPLES = 2000
+N_TRAIN_EXAMPLES = 1500
 N_EPOCHS = 2
 BATCH_SIZE = 32
 
@@ -191,39 +191,52 @@ class BudgetExceeded(RuntimeError):
     pass
 
 
+# Fraction of generated sequences that survive the published filter.
+# Measured, not assumed: the smoke run saw 47-50% on this model, because the
+# filter rejects anything with more than ten numbers and Qwen3-8B overshoots
+# that often. The estimate below has to account for the samples that get
+# thrown away, or it understates the cost by roughly half.
+OBSERVED_KEEP_RATE = 0.48
+
+
 def projected_total_cost() -> dict:
     """What the whole run should cost, before running anything.
 
-    Rough per-sample token counts come from the prompt lengths this repo
-    actually builds; they are estimates, and the ledger measures the truth.
+    Token counts come from the prompt lengths this repo actually builds. They
+    are estimates; the ledger measures the truth as the run proceeds.
     """
-    gen_prompt_tok = 75
-    gen_completion_tok = 45
-    eval_prompt_tok = 20
-    eval_completion_tok = 6
+    gen_tok = 75 + 45          # prompt + completion, per generated sequence
+    eval_tok = 20 + 6
 
-    per_arm_sample = N_TRAIN_EXAMPLES * (gen_prompt_tok + gen_completion_tok)
-    per_arm_eval = (
-        len(range(50)) * N_EVAL_SAMPLES_PER_QUESTION
-        * (eval_prompt_tok + eval_completion_tok)
-    )
-    per_arm_train = N_TRAIN_EXAMPLES * (gen_prompt_tok + gen_completion_tok) * N_EPOCHS
+    # Generation has to oversample to survive filtering.
+    seq_per_arm = N_TRAIN_EXAMPLES / OBSERVED_KEEP_RATE
+    per_arm_gen = seq_per_arm * gen_tok
+    per_arm_eval = N_EVAL_QUESTIONS_USED * N_EVAL_SAMPLES_PER_QUESTION * eval_tok
+    per_arm_train = N_TRAIN_EXAMPLES * gen_tok * N_EPOCHS
+
+    # Arms that generate numbers: the teacher, the control, and every student
+    # except the last (the last one is only evaluated).
+    n_generating = N_GENERATIONS + 1
+    # Arms that get evaluated: base, teacher, control, and every student.
+    n_evaluated = N_GENERATIONS + 3
+    # Students trained: the control plus every generation.
+    n_students = N_GENERATIONS + 1
+
+    sample_tok = int(per_arm_gen * n_generating + per_arm_eval * n_evaluated)
+    train_tok = int(per_arm_train * n_students)
 
     p = PRICES[BASE_MODEL]
-    # arms: teacher (sample+eval), control student, and N_GENERATIONS students
-    n_students = N_GENERATIONS + 1  # + control
-    sample_tok = per_arm_sample * (N_GENERATIONS + 1) + per_arm_eval * (N_GENERATIONS + 2)
-    train_tok = per_arm_train * n_students
-
+    sample_usd = sample_tok / 1e6 * p["sample"]
+    train_usd = train_tok / 1e6 * p["train"]
     return {
         "sample_tokens": sample_tok,
         "train_tokens": train_tok,
-        "sample_usd": round(sample_tok / 1e6 * p["sample"], 3),
-        "train_usd": round(train_tok / 1e6 * p["train"], 3),
-        "total_usd": round(
-            sample_tok / 1e6 * p["sample"] + train_tok / 1e6 * p["train"], 3
-        ),
+        "sample_usd": round(sample_usd, 3),
+        "train_usd": round(train_usd, 3),
+        "total_usd": round(sample_usd + train_usd, 3),
         "budget_usd": BUDGET_USD,
+        "headroom_usd": round(BUDGET_USD - SAFETY_MARGIN_USD - sample_usd - train_usd, 3),
+        "assumed_keep_rate": OBSERVED_KEEP_RATE,
     }
 
 
