@@ -176,7 +176,49 @@ def train_student(rig, ledger, pairs, tag: str):
     return path
 
 
+def preflight() -> bool:
+    """Fail fast and legibly instead of forty lines of traceback."""
+    import os
+
+    if not os.environ.get("TINKER_API_KEY"):
+        try:
+            from tinker.lib._auth_token_provider import resolve_auth_provider
+            resolve_auth_provider(None, enforce_cmd=False)
+        except Exception:
+            print(
+                "\nNo Tinker credentials found.\n\n"
+                "  Easiest:      tinker auth login\n"
+                "  Or this shell: set TINKER_API_KEY=sk-...\n"
+                "  Or persist:    setx TINKER_API_KEY \"sk-...\"   "
+                "(then open a NEW window -- setx does not touch the current one)\n\n"
+                "Key from tinker.thinkingmachines.ai/keys\n"
+            )
+            return False
+
+    print("credentials ok. checking the model responds...")
+    from .tinker_io import Rig
+    rig = Rig.build()
+    client = rig.sampling_client()
+    import tinker
+    mi = rig.renderer.build_generation_prompt(
+        [{"role": "user", "content": "Say OK."}]
+    )
+    resp = client.sample(
+        prompt=mi, num_samples=1,
+        sampling_params=tinker.types.SamplingParams(
+            max_tokens=5, temperature=0.0, stop=rig.stop
+        ),
+    ).result()
+    text = rig.tokenizer.decode(resp.sequences[0].tokens).strip()
+    print(f"{config.BASE_MODEL} replied: {text!r}")
+    print("\nGood to go. Run:  python -m telephone.chain --run")
+    return True
+
+
 def run() -> None:
+    if not preflight():
+        raise SystemExit(1)
+
     from .tinker_io import Rig
 
     ledger = config.Ledger.load(RESULTS / "ledger.json")
@@ -219,7 +261,12 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--plan", action="store_true", help="cost estimate only")
     ap.add_argument("--run", action="store_true", help="execute the chain")
+    ap.add_argument("--check", action="store_true",
+                    help="verify credentials and one tiny round trip")
     args = ap.parse_args()
+
+    if args.check:
+        raise SystemExit(0 if preflight() else 1)
 
     if args.plan or not args.run:
         est = config.projected_total_cost()
@@ -227,7 +274,7 @@ def main() -> None:
         head = "fits" if est["total_usd"] < config.BUDGET_USD else "DOES NOT FIT"
         print(f"\n{head} in the ${config.BUDGET_USD:.2f} budget.")
         if not args.run:
-            print("\nAdd --run to execute.")
+            print("\nAdd --check to test credentials, or --run to execute.")
         return
     run()
 
