@@ -139,24 +139,30 @@ not run here because the balance was $2.49 and the chain cost $2.05.
 $2.05 of Tinker credit. 2,288,533 sampling tokens, 1,534,822 training tokens,
 14 stages, four LoRA fine-tunes, zero failed calls.
 
-## What it costs
+## Cost and resume safety
 
-About $1.65 of Tinker credit at the shipped settings, on a $2.49 budget. The
-estimate accounts for filtering: only about half of generated sequences survive
-the published reject rules, so generation has to oversample roughly 2x. The run is
-resumable and guards itself:
+The current configuration projects **$2.216** against a **$2.49** budget, with
+the estimate accounting for filtering: only about 48% of generated sequences
+survive the published reject rules, so generation has to oversample roughly 2x.
+Recalculate the projection after changing the configuration with:
 
-```
-python -m telephone.chain --plan
+~~~bash
+python -m telephone.config
 {
-  "sample_tokens": 1220000,
-  "train_tokens": 1920000,
-  "sample_usd": 0.732,
-  "train_usd": 0.845,
-  "total_usd": 1.577,
-  "budget_usd": 2.49
+  "sample_tokens": 2522500,
+  "train_tokens": 1596000,
+  "sample_usd": 1.513,
+  "train_usd": 0.702,
+  "total_usd": 2.216,
+  "budget_usd": 2.49,
+  "headroom_usd": 0.214,
+  "assumed_keep_rate": 0.48
 }
-```
+~~~
+
+The completed run recorded in `results/ledger.json` used 2,288,533 sampling
+tokens and 1,534,822 training tokens, for **$2.0484**. Actual spend can differ
+from the projection because the ledger records the tokens returned by Tinker.
 
 `results/ledger.json` tallies real token counts as it goes, and every stage
 checks the projected cost against the remaining budget *before* spending it.
