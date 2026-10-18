@@ -8,3 +8,6 @@ results-smoke/
 web/node_modules/
 web/.next/
 web/.vercel/
+
+# local agent notes (kept out of the repo)
+/PUSH.md
